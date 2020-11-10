@@ -1,0 +1,76 @@
+#!/bin/bash
+set -e
+
+HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
+. "$HERE/../scripts/_env"
+. "$HERE/_env"
+. "$ROOT/scripts/_trap"
+
+mkdir --parents "$WORKSPACE"
+
+m 'cleaning up...'
+
+kubectl create namespace "$NAMESPACE" || true
+kubectl config set-context --current --namespace="$NAMESPACE"
+reposure operator uninstall --wait
+reposure registry uninstall --wait
+kubectl delete events --all
+
+if [ "$1" == '-b' ]; then
+	"$ROOT/scripts/build-container-images"
+	"$ROOT/scripts/publish-container-images"
+fi
+
+m 'installing operator...'
+
+reposure operator install --wait
+
+m 'installing registry...'
+
+reposure registry install --wait
+
+#m 'deploying authentication secret...'
+
+#rm --recursive --force "$WORKSPACE/registry-htpasswd"
+# Note: Docker registry requires bcrypt
+# https://docs.docker.com/registry/configuration/#htpasswd
+#htpasswd -cbB "$WORKSPACE/registry-htpasswd" username password
+#kubectl create secret generic registry-auth --from-file="$WORKSPACE/registry-htpasswd"
+
+m 'creating repository...'
+
+reposure repository create default --provider=reposure --wait
+
+m 'pushing text file to "catalog/hello"'
+
+echo 'hello world' > "$WORKSPACE/hello.txt"
+reposure image push default catalog/hello "$WORKSPACE/hello.txt"
+
+sleep 1
+
+m 'pulling text file from "catalog/hello"'
+
+reposure image pull default catalog/hello
+
+m 'creating container image tarball'
+
+podman rmi localhost:5000/catalog/myimage || true
+podman rmi docker.io/library/hello-world || true
+podman pull docker.io/library/hello-world
+podman tag docker.io/library/hello-world localhost:5000/catalog/myimage
+rm --force "$WORKSPACE/myimage.tar"
+podman save localhost:5000/catalog/myimage --output "$WORKSPACE/myimage.tar"
+
+m 'pushing container image tarball to "catalog/myimage"'
+
+reposure image push default catalog/myimage "$WORKSPACE/myimage.tar"
+
+sleep 3
+
+m 'pulling container image tarball from "catalog/myimage"'
+
+reposure image pull default catalog/myimage > "$WORKSPACE/myimage-pulled.tar"
+
+m 'listing images'
+
+reposure image list default

@@ -1,0 +1,26 @@
+#!/bin/bash
+set -e
+
+HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
+. "$HERE/_env"
+. "$HERE/_trap"
+
+"$HERE/build"
+
+BASE_IMAGE=registry.access.redhat.com/ubi8/ubi
+# ubi-minimal does not have "tar" which is needed for kubectl cp
+
+m 'building reposure-surrogate..'
+
+CONTAINER_ID=$(buildah from "$BASE_IMAGE")
+buildah add "$CONTAINER_ID" "$GOPATH/bin/reposure-registry-spooler" /usr/bin/
+buildah add "$CONTAINER_ID" "$GOPATH/bin/reposure-registry-client" /usr/bin/
+buildah config --entrypoint "/usr/bin/reposure-registry-spooler" --author Reposure --created-by buildah "$CONTAINER_ID"
+buildah commit "$CONTAINER_ID" localhost/reposure-surrogate
+
+m 'building reposure-operator..'
+
+CONTAINER_ID=$(buildah from "$BASE_IMAGE")
+buildah add "$CONTAINER_ID" "$GOPATH/bin/reposure-operator" /usr/bin/
+buildah config --entrypoint "/usr/bin/reposure-operator" --author Reposure --created-by buildah "$CONTAINER_ID"
+buildah commit "$CONTAINER_ID" localhost/reposure-operator

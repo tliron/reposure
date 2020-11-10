@@ -1,0 +1,21 @@
+#!/bin/bash
+set -e
+
+HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
+. "$HERE/_env"
+
+gofmt -w -s -e \
+	"$ROOT/client/admin" \
+	"$ROOT/client/command" \
+	"$ROOT/client/registry" \
+	"$ROOT/client/repository" \
+	"$ROOT/client/spooler" \
+	"$ROOT/controller" \
+	"$ROOT/reposure" \
+	"$ROOT/reposure/commands" \
+	"$ROOT/reposure-operator" \
+	"$ROOT/reposure-registry-client" \
+	"$ROOT/reposure-registry-spooler" \
+	"$ROOT/resources" \
+	"$ROOT/resources/reposure.puccini.cloud" \
+	"$ROOT/resources/reposure.puccini.cloud/v1alpha1"
