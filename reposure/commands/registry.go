@@ -10,5 +10,5 @@ func init() {
 
 var registryCommand = &cobra.Command{
 	Use:   "registry",
-	Short: "Control the Reposure container image registry",
+	Short: "Work with registries",
 }

@@ -5,24 +5,24 @@ import (
 
 	"github.com/op/go-logging"
 	commandclient "github.com/tliron/reposure/client/command"
-	repositoryclient "github.com/tliron/reposure/client/repository"
+	registryclient "github.com/tliron/reposure/client/registry"
 	spoolerclient "github.com/tliron/reposure/client/spooler"
 	resources "github.com/tliron/reposure/resources/reposure.puccini.cloud/v1alpha1"
 )
 
-func (self *Client) RepositoryClient(repository *resources.Repository) *repositoryclient.Client {
-	return repositoryclient.NewClient(
+func (self *Client) RegistryClient() *registryclient.Client {
+	return registryclient.NewClient(
 		self.Kubernetes,
 		self.Reposure,
 		self.Context,
-		logging.MustGetLogger(fmt.Sprintf("%s.repository", self.LogName)),
+		logging.MustGetLogger(fmt.Sprintf("%s.registry", self.LogName)),
 		self.Namespace,
 		tlsMountPath,
 	)
 }
 
-func (self *Client) SpoolerClient(repository *resources.Repository) *spoolerclient.Client {
-	appName := self.GetRepositorySurrogateAppName(repository.Name)
+func (self *Client) SpoolerClient(registry *resources.Registry) *spoolerclient.Client {
+	appName := self.GetRegistrySurrogateAppName(registry.Name)
 
 	return spoolerclient.NewClient(
 		self.Kubernetes,
@@ -37,13 +37,12 @@ func (self *Client) SpoolerClient(repository *resources.Repository) *spoolerclie
 	)
 }
 
-func (self *Client) CommandClient(repository *resources.Repository) (*commandclient.Client, error) {
-	appName := self.GetRepositorySurrogateAppName(repository.Name)
+func (self *Client) CommandClient(registry *resources.Registry) (*commandclient.Client, error) {
+	appName := self.GetRegistrySurrogateAppName(registry.Name)
+	registryClient := self.RegistryClient()
 
-	repositoryClient := self.RepositoryClient(repository)
-
-	if _, username, password, token, err := repositoryClient.GetAuth(repository); err == nil {
-		if address, err := repositoryClient.GetHost(repository); err == nil {
+	if _, username, password, token, err := registryClient.GetAuthorization(registry); err == nil {
+		if address, err := registryClient.GetHost(registry); err == nil {
 			return commandclient.NewClient(
 				self.Kubernetes,
 				self.REST,
@@ -54,7 +53,7 @@ func (self *Client) CommandClient(repository *resources.Repository) (*commandcli
 				appName,
 				surrogateContainerName,
 				address,
-				repositoryClient.GetCertificatePath(repository),
+				registryClient.GetCertificatePath(registry),
 				username,
 				password,
 				token,

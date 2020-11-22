@@ -40,17 +40,20 @@ type Controller struct {
 	KubernetesInformerFactory informers.SharedInformerFactory
 	ReposureInformerFactory   reposureinformers.SharedInformerFactory
 
-	Repositories reposurelisters.RepositoryLister
+	Registries reposurelisters.RegistryLister
 
 	Context contextpkg.Context
 	Log     *logging.Logger
 }
 
-func NewController(toolName string, cluster bool, namespace string, dynamic dynamicpkg.Interface, kubernetes kubernetes.Interface, apiExtensions apiextensionspkg.Interface, reposure reposureclientset.Interface, config *restpkg.Config, informerResyncPeriod time.Duration, stopChannel <-chan struct{}) *Controller {
+func NewController(toolName string, clusterMode bool, clusterRole string, namespace string, dynamic dynamicpkg.Interface, kubernetes kubernetes.Interface, apiExtensions apiextensionspkg.Interface, reposure reposureclientset.Interface, config *restpkg.Config, informerResyncPeriod time.Duration, stopChannel <-chan struct{}) *Controller {
 	context := contextpkg.TODO()
 
-	if cluster {
+	if clusterMode {
 		namespace = ""
+		if clusterRole != "" {
+			clusterRole = "cluster-admin"
+		}
 	}
 
 	log := logging.MustGetLogger(fmt.Sprintf("%s.controller", toolName))
@@ -74,18 +77,19 @@ func NewController(toolName string, cluster bool, namespace string, dynamic dyna
 		kubernetes.CoreV1().RESTClient(),
 		config,
 		context,
-		cluster,
+		clusterMode,
+		clusterRole,
 		namespace,
 		NamePrefix,
 		PartOf,
 		ManagedBy,
 		OperatorImageReference,
-		RepositorySurrogateImageReference,
-		RegistryImageReference,
+		SurrogateImageReference,
+		SimpleImageReference,
 		fmt.Sprintf("%s.client", toolName),
 	)
 
-	if cluster {
+	if clusterMode {
 		self.KubernetesInformerFactory = informers.NewSharedInformerFactory(kubernetes, informerResyncPeriod)
 		self.ReposureInformerFactory = reposureinformers.NewSharedInformerFactory(reposure, informerResyncPeriod)
 	} else {
@@ -94,25 +98,25 @@ func NewController(toolName string, cluster bool, namespace string, dynamic dyna
 	}
 
 	// Informers
-	repositoryInformer := self.ReposureInformerFactory.Reposure().V1alpha1().Repositories()
+	registryInformer := self.ReposureInformerFactory.Reposure().V1alpha1().Registries()
 
 	// Listers
-	self.Repositories = repositoryInformer.Lister()
+	self.Registries = registryInformer.Lister()
 
 	// Processors
 
 	processorPeriod := 5 * time.Second
 
-	self.Processors.Add(reposureresources.RepositoryGVK, kubernetesutil.NewProcessor(
+	self.Processors.Add(reposureresources.RegistryGVK, kubernetesutil.NewProcessor(
 		toolName,
-		"repositories",
-		repositoryInformer.Informer(),
+		"registries",
+		registryInformer.Informer(),
 		processorPeriod,
 		func(name string, namespace string) (interface{}, error) {
-			return self.Client.GetRepository(namespace, name)
+			return self.Client.GetRegistry(namespace, name)
 		},
 		func(object interface{}) (bool, error) {
-			return self.processRepository(object.(*reposureresources.Repository))
+			return self.processRegistry(object.(*reposureresources.Registry))
 		},
 	))
 

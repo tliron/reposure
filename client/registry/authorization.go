@@ -1,4 +1,4 @@
-package repository
+package registry
 
 import (
 	"fmt"
@@ -10,10 +10,10 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (self *Client) GetAuth(repository *resources.Repository) (string, string, string, string, error) {
-	if host, err := self.GetHost(repository); err == nil {
-		if repository.Spec.AuthSecret != "" {
-			if authSecret, err := self.Kubernetes.CoreV1().Secrets(self.Namespace).Get(self.Context, repository.Spec.AuthSecret, meta.GetOptions{}); err == nil {
+func (self *Client) GetAuthorization(registry *resources.Registry) (string, string, string, string, error) {
+	if host, err := self.GetHost(registry); err == nil {
+		if registry.Spec.AuthorizationSecret != "" {
+			if authSecret, err := self.Kubernetes.CoreV1().Secrets(self.Namespace).Get(self.Context, registry.Spec.AuthorizationSecret, meta.GetOptions{}); err == nil {
 				switch authSecret.Type {
 				case core.SecretTypeServiceAccountToken:
 					if data, ok := authSecret.Data[core.ServiceAccountTokenKey]; ok {

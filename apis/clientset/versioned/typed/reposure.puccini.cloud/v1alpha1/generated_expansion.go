@@ -2,4 +2,4 @@
 
 package v1alpha1
 
-type RepositoryExpansion interface{}
+type RegistryExpansion interface{}

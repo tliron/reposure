@@ -12,8 +12,8 @@ type FakeReposureV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeReposureV1alpha1) Repositories(namespace string) v1alpha1.RepositoryInterface {
-	return &FakeRepositories{c, namespace}
+func (c *FakeReposureV1alpha1) Registries(namespace string) v1alpha1.RegistryInterface {
+	return &FakeRegistries{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate

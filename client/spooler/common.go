@@ -12,8 +12,8 @@ func (self *Client) getFirstPodName() (string, error) {
 	return kubernetesutil.GetFirstPodName(self.Context, self.Kubernetes, self.Namespace, self.SurrogateAppName)
 }
 
-func (self *Client) getPath(imageReference string) string {
-	return filepath.Join(self.SpoolDirectory, strings.ReplaceAll(imageReference, "/", "\\"))
+func (self *Client) getPath(imageName string) string {
+	return filepath.Join(self.SpoolDirectory, strings.ReplaceAll(imageName, "/", "\\"))
 }
 
 func (self *Client) writeToContainer(podName string, reader io.Reader, targetPath string) error {

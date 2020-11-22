@@ -14,29 +14,29 @@ const spoolPath = "/spool"
 
 const surrogateContainerName = "surrogate"
 
-func (self *Client) CreateRepositorySurrogate(repository *resources.Repository) (*core.Pod, error) {
-	repositoryClient := self.RepositoryClient(repository)
+func (self *Client) CreateRegistrySurrogate(registry *resources.Registry) (*core.Pod, error) {
+	registryClient := self.RegistryClient()
 
-	var repositoryHost string
-	repositoryHost, err := repositoryClient.GetHost(repository)
+	var registryHost string
+	registryHost, err := registryClient.GetHost(registry)
 	if err != nil {
 		return nil, err
 	}
 
-	registryHost := "docker.io"
-	appName := self.GetRepositorySurrogateAppName(repository.Name)
+	sourceRegistryHost := "docker.io"
+	appName := self.GetRegistrySurrogateAppName(registry.Name)
 
 	pod := &core.Pod{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      appName,
-			Namespace: repository.Namespace,
-			Labels:    self.Labels(appName, "surrogate", repository.Namespace),
+			Namespace: registry.Namespace,
+			Labels:    self.Labels(appName, "surrogate", registry.Namespace),
 		},
 		Spec: core.PodSpec{
 			Containers: []core.Container{
 				{
 					Name:            surrogateContainerName,
-					Image:           fmt.Sprintf("%s/%s", registryHost, self.RepositorySurrogateImageReference),
+					Image:           fmt.Sprintf("%s/%s", sourceRegistryHost, self.SurrogateImageReference),
 					ImagePullPolicy: core.PullAlways,
 					VolumeMounts: []core.VolumeMount{
 						{
@@ -47,7 +47,7 @@ func (self *Client) CreateRepositorySurrogate(repository *resources.Repository) 
 					Env: []core.EnvVar{
 						{
 							Name:  "REPOSURE_REGISTRY_SPOOLER_registry",
-							Value: repositoryHost,
+							Value: registryHost,
 						},
 						{
 							Name:  "REPOSURE_REGISTRY_SPOOLER_verbose",
@@ -81,7 +81,7 @@ func (self *Client) CreateRepositorySurrogate(repository *resources.Repository) 
 		},
 	}
 
-	if repository.Spec.TLSSecret != "" {
+	if registry.Spec.AuthenticationSecret != "" {
 		pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, core.VolumeMount{
 			Name:      "tls",
 			MountPath: tlsMountPath,
@@ -90,20 +90,20 @@ func (self *Client) CreateRepositorySurrogate(repository *resources.Repository) 
 
 		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, core.EnvVar{
 			Name:  "REPOSURE_REGISTRY_SPOOLER_certificate",
-			Value: repositoryClient.GetCertificatePath(repository),
+			Value: registryClient.GetCertificatePath(registry),
 		})
 
 		pod.Spec.Volumes = append(pod.Spec.Volumes, core.Volume{
 			Name: "tls",
 			VolumeSource: core.VolumeSource{
 				Secret: &core.SecretVolumeSource{
-					SecretName: repository.Spec.TLSSecret,
+					SecretName: registry.Spec.AuthenticationSecret,
 				},
 			},
 		})
 	}
 
-	if _, username, password, token, err := repositoryClient.GetAuth(repository); err == nil {
+	if _, username, password, token, err := registryClient.GetAuthorization(registry); err == nil {
 		if username != "" {
 			pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, core.EnvVar{
 				Name:  "REPOSURE_REGISTRY_SPOOLER_username",
@@ -127,17 +127,17 @@ func (self *Client) CreateRepositorySurrogate(repository *resources.Repository) 
 	}
 
 	ownerReferences := pod.GetOwnerReferences()
-	ownerReferences = append(ownerReferences, *meta.NewControllerRef(repository, repository.GroupVersionKind()))
+	ownerReferences = append(ownerReferences, *meta.NewControllerRef(registry, registry.GroupVersionKind()))
 	pod.SetOwnerReferences(ownerReferences)
 
 	return self.CreatePod(pod)
 }
 
-func (self *Client) WaitForRepositorySurrogate(namespace string, repositoryName string) (*core.Pod, error) {
-	appName := self.GetRepositorySurrogateAppName(repositoryName)
+func (self *Client) WaitForRegistrySurrogate(namespace string, registryName string) (*core.Pod, error) {
+	appName := self.GetRegistrySurrogateAppName(registryName)
 	return kubernetes.WaitForPod(self.Context, self.Kubernetes, self.Log, namespace, appName)
 }
 
-func (self *Client) GetRepositorySurrogateAppName(repositoryName string) string {
-	return fmt.Sprintf("%s-surrogate-%s", self.NamePrefix, repositoryName)
+func (self *Client) GetRegistrySurrogateAppName(registryName string) string {
+	return fmt.Sprintf("%s-surrogate-%s", self.NamePrefix, registryName)
 }

@@ -7,8 +7,8 @@ HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
 gofmt -w -s -e \
 	"$ROOT/client/admin" \
 	"$ROOT/client/command" \
+	"$ROOT/client/direct" \
 	"$ROOT/client/registry" \
-	"$ROOT/client/repository" \
 	"$ROOT/client/spooler" \
 	"$ROOT/controller" \
 	"$ROOT/reposure" \

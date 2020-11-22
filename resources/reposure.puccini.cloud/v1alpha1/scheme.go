@@ -31,8 +31,8 @@ var AddToScheme = schemeBuilder.AddToScheme
 var schemeBuilder = runtime.NewSchemeBuilder(func(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(
 		SchemeGroupVersion,
-		&Repository{},
-		&RepositoryList{},
+		&Registry{},
+		&RegistryList{},
 	)
 	meta.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

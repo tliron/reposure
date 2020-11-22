@@ -33,7 +33,7 @@ func NewClient() *Client {
 	util.FailOnError(err)
 
 	namespace_ := namespace
-	if cluster {
+	if clusterMode {
 		namespace_ = ""
 	} else if namespace_ == "" {
 		if namespace__, ok := kubernetesutil.GetConfiguredNamespace(kubeconfigPath, context); ok {
@@ -67,14 +67,15 @@ func (self *Client) AdminClient() *adminclient.Client {
 		self.REST,
 		self.Config,
 		self.Context,
-		cluster,
+		clusterMode,
+		clusterRole,
 		self.Namespace,
 		controller.NamePrefix,
 		controller.PartOf,
 		controller.ManagedBy,
 		controller.OperatorImageReference,
-		controller.RepositorySurrogateImageReference,
-		controller.RegistryImageReference,
+		controller.SurrogateImageReference,
+		controller.SimpleImageReference,
 		"reposure.client",
 	)
 }

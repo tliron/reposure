@@ -1,3 +1,5 @@
+*This is an early release. Some features are not yet fully implemented.*
+
 Reposure
 ========
 
@@ -29,8 +31,8 @@ cluster that will be using it, a configuration that we're here calling a "cloud-
 Doing so can significantly simplify the deployment of applications that require a private registry,
 as indeed the registry would be just part of the workload. The most obvious use case is cloud-native
 CI/CD pipelines, for which building and packaging code, publishing images, and deploying containers
-all happen within the cluster. Indeed, platform as diverse as OpenShift, CodeReady Containers, and
-Minikube come with built-in cloud-native registries exactly for this purpose.
+all happen within the cluster. Indeed, platform as diverse as OpenShift, OKD, CodeReady Containers,
+and Minikube come with built-in cloud-native registries exactly for this purpose.
 
 ### The challenge
 
@@ -59,8 +61,8 @@ Reposure can assist with many of these challenges:
 * If on the other hand you need programmatic access to the registry from *inside* the cluster
   (direct, without the surrogate), Reposure provides a client API based on
   [go-containerregistry](https://github.com/google/go-containerregistry) (Go language).
-* Reposure has baked-in support for the built-in registries of OpenShift, CodeReady Containers, and
-  Minikube.
+* Reposure has baked-in support for the built-in registries of OpenShift, OKD, CodeReady Containers,
+  and Minikube.
 * Reposure can deploy its own cloud-native registry, based on the Docker registry, which can useful
   for testing. (Note that by default it uses self-signed certificates, which may be inaccessible
   to your container runtime.)
@@ -76,7 +78,7 @@ can work in insecure mode, which might be fine for development, but otherwise yo
 to set up TLS authentication and authorization.
 
 Another challenge is that references within the image contain the registry in which they are stored,
-e.g. `10.97.119.139:5000/catalog/myimage:latest`. This means that the proxy would have to unpack the image,
+e.g. `10.97.119.139:5000/mylibrary/myimage:latest`. This means that the proxy would have to unpack the image,
 rewrite the manifest, and repack it, and this would have to happen for both pushing and pulling.
 
 The trick, then, is to use Kubernetes's existing control plane, which allows for executing commands
@@ -99,19 +101,25 @@ even easier.
 
 The problem with this approach is that if you are working outside the cluster then you would need to
 use the `reposure` tool instead of your usual tools. So, for example, you can't use `buildah` to
-directly push an image to the repository.
+directly push an image to the registry.
 
-The workaround is to export your image to a tarball and push that instead. Note that if you want
-Kubernetes's container runtime to be able to pull it (say, for a Pod) then you would also need to
-make sure to re-tag it accordingly. The `podman` tool can do all this for you. For example, if we are
+The workaround is often to export your image to a tarball and push that instead. Note that if you
+want Kubernetes's container runtime to be able to pull it (say, for a Pod) then you would also need
+to make sure to re-tag it accordingly. The `podman` tool can do this for you. For example, if we are
 using `buildah` to build locally:
 
+    # Build
     CONTAINER_ID=$(buildah from scratch)
     ...
-    buildah commit $CONTAINER_ID localhost/catalog/myimage
-    podman tag localhost/catalog/myimage 10.97.119.139:5000/catalog/myimage
-    podman save 10.97.119.139:5000/catalog/myimage --output myimage.tar
-    reposure image push default catalog/myimage myimage.tar
+    buildah commit $CONTAINER_ID localhost/mylibrary/myimage
+    
+    # Re-tag
+    HOST=$(reposure registry info myrepo host)
+    podman tag localhost/mylibrary/myimage $HOST/mylibrary/myimage
+
+    # Export and push
+    podman save $HOST/mylibrary/myimage --output myimage.tar
+    reposure image push myrepo mylibrary/myimage myimage.tar
 
 (Note that spooler supports `.tar` as well as `.tar.gz` or `.tgz`.)
 
@@ -128,8 +136,23 @@ the spooler will create one for you (an image with a single layer). Likewise, wh
 tarball, the `reposure` tool can unpack it for you. For example:
 
     echo 'hello world' > hello.txt
-    reposure image push default catalog/hello hello.txt
-    reposure image pull default catalog/hello --unpack
+    reposure image push myrepo catalog/hello hello.txt
+    reposure image pull myrepo catalog/hello --unpack
+
+
+Terminology
+===========
+
+* *Registry*: This is the backend implementation, the actual server.
+* *Repository*: The image reference structure comprises a repository name and an image name (as well
+  as a "tag", that is usually used as the version). This extra level allows for namespace separation
+  as well as permission management per repository. So, it is correct to say that the image is stored
+  in a "repository" and it is also correct to say that it is stored in a "registry". Note that if
+  you do not specify a repository name in the reference it internally defaults to "library" (and if
+  you don't specify a tag it will default to "latest").
+* *Simple*: Reposure can deploy a "simple" registry server for you, based on the default Docker
+  registry. This is intended for development and testing purposes, but may be good enough for some
+  production uses. Of course there exist more robust implementations, such as Quay and Harbor.
 
 
 Basic Usage
@@ -139,7 +162,7 @@ Basic Usage
 
 `reposure operator install`
 
-`reposure repository create default --provider=minikube`
+`reposure registry create default --provider=minikube`
 
 
 

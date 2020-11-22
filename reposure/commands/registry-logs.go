@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -11,9 +13,10 @@ func init() {
 }
 
 var registryLogsCommand = &cobra.Command{
-	Use:   "logs",
-	Short: "Show the logs of the Reposure container image registry",
+	Use:   "logs [REGISTRY NAME]",
+	Short: "Show the logs of a registry surrogate",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		Logs("registry", "registry")
+		Logs(fmt.Sprintf("surrogate-%s", args[0]), "surrogate")
 	},
 }

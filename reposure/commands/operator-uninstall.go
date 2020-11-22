@@ -13,6 +13,10 @@ var operatorUninstallCommand = &cobra.Command{
 	Use:   "uninstall",
 	Short: "Uninstall the Reposure operator",
 	Run: func(cmd *cobra.Command, args []string) {
-		NewClient().AdminClient().UninstallOperator(wait)
+		UninstallOperator()
 	},
+}
+
+func UninstallOperator() {
+	NewClient().AdminClient().UninstallOperator(wait)
 }

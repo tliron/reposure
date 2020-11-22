@@ -9,12 +9,12 @@ import (
 
 	"github.com/gofrs/flock"
 	"github.com/op/go-logging"
-	registryclient "github.com/tliron/reposure/client/registry"
+	directclient "github.com/tliron/reposure/client/direct"
 )
 
 type Publisher struct {
 	registry string
-	client   *registryclient.Client
+	client   *directclient.Client
 	work     chan string
 	log      *logging.Logger
 }
@@ -22,7 +22,7 @@ type Publisher struct {
 func NewPublisher(registry string, roundTripper http.RoundTripper, username string, password string, token string, queue int) *Publisher {
 	return &Publisher{
 		registry: registry,
-		client:   registryclient.NewClient(roundTripper, username, password, token),
+		client:   directclient.NewClient(roundTripper, username, password, token),
 		work:     make(chan string, queue),
 		log:      logging.MustGetLogger("publisher"),
 	}

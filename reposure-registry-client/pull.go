@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tliron/kutil/util"
-	registryclient "github.com/tliron/reposure/client/registry"
+	directclient "github.com/tliron/reposure/client/direct"
 )
 
 var output string
@@ -27,6 +27,6 @@ var pullCommand = &cobra.Command{
 
 func Pull(registry string, name string, path string) {
 	name = fmt.Sprintf("%s/%s", registry, name)
-	err := registryclient.NewClient(roundTripper, username, password, token).PullTarball(name, path)
+	err := directclient.NewClient(roundTripper, username, password, token).PullTarball(name, path)
 	util.FailOnError(err)
 }

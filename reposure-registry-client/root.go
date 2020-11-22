@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tliron/kutil/terminal"
 	"github.com/tliron/kutil/util"
-	registryclient "github.com/tliron/reposure/client/registry"
+	directclient "github.com/tliron/reposure/client/direct"
 )
 
 var logTo string
@@ -49,7 +49,7 @@ var rootCommand = &cobra.Command{
 		}
 
 		if certificatePath != "" {
-			roundTripper, err = registryclient.TLSRoundTripper(certificatePath)
+			roundTripper, err = directclient.TLSRoundTripper(certificatePath)
 			util.FailOnError(err)
 		}
 	},

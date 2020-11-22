@@ -20,7 +20,8 @@ var strict bool
 var masterUrl string
 var kubeconfigPath string
 var context string
-var cluster bool
+var clusterMode bool
+var clusterRole string
 var namespace string
 
 func init() {

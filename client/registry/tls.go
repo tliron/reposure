@@ -3,33 +3,66 @@ package registry
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
+	"fmt"
 	"net/http"
 
+	kubernetesutil "github.com/tliron/kutil/kubernetes"
 	"github.com/tliron/kutil/util"
+	resources "github.com/tliron/reposure/resources/reposure.puccini.cloud/v1alpha1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TLSRoundTripper(certificatePath string) (http.RoundTripper, error) {
-	if certPool, err := CertPool(certificatePath); err == nil {
-		if certPool != nil {
-			// We need to force HTTPS because go-containerregistry will attempt to drop down to HTTP for local addresses
-			return util.NewForceHTTPSRoundTripper(&http.Transport{
-				TLSClientConfig: &tls.Config{
-					RootCAs: certPool,
-				},
-			}), nil
-		} else {
-			return nil, nil
+func (self *Client) GetCertificatePath(registry *resources.Registry) string {
+	if registry.Spec.AuthenticationSecret != "" {
+		secretDataKey := registry.Spec.AuthenticationSecretDataKey
+		if secretDataKey == "" {
+			secretDataKey = core.TLSCertKey
 		}
+		return fmt.Sprintf("%s/%s", self.TLSMountPath, secretDataKey)
+	} else {
+		return ""
+	}
+}
+
+func (self *Client) GetTLSCertBytes(registry *resources.Registry) ([]byte, error) {
+	if registry.Spec.AuthenticationSecret != "" {
+		if secret, err := self.Kubernetes.CoreV1().Secrets(registry.Namespace).Get(self.Context, registry.Spec.AuthenticationSecret, meta.GetOptions{}); err == nil {
+			return kubernetesutil.GetSecretTLSCertBytes(secret, registry.Spec.AuthenticationSecretDataKey)
+
+		} else {
+			return nil, err
+		}
+	} else {
+		return nil, nil
+	}
+}
+
+func (self *Client) GetTLSCertPool(registry *resources.Registry) (*x509.CertPool, error) {
+	if bytes, err := self.GetTLSCertBytes(registry); err == nil {
+		return util.ParseX509CertPool(bytes)
 	} else {
 		return nil, err
 	}
 }
 
-func CertPool(certificatePath string) (*x509.CertPool, error) {
-	if bytes, err := ioutil.ReadFile(certificatePath); err == nil {
-		return util.ParseX509CertPool(bytes)
+func (self *Client) GetHTTPRoundTripper(registry *resources.Registry) (string, http.RoundTripper, error) {
+	if certPool, err := self.GetTLSCertPool(registry); err == nil {
+		if certPool != nil {
+			if host, err := self.GetHost(registry); err == nil {
+				roundTripper := util.NewForceHTTPSRoundTripper(&http.Transport{
+					TLSClientConfig: &tls.Config{
+						RootCAs: certPool,
+					},
+				})
+				return host, roundTripper, nil
+			} else {
+				return "", nil, err
+			}
+		} else {
+			return "", nil, nil
+		}
 	} else {
-		return nil, err
+		return "", nil, err
 	}
 }

@@ -13,22 +13,24 @@ func init() {
 }
 
 var imageListCommand = &cobra.Command{
-	Use:   "list [REPOSITORY NAME]",
-	Short: "List images in a repository",
+	Use:   "list [REGISTRY NAME]",
+	Short: "List images in a registry",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		repositoryName := args[0]
-
-		adminClient := NewClient().AdminClient()
-		repository, err := adminClient.GetRepository(namespace, repositoryName)
-		util.FailOnError(err)
-		commandClient, err := adminClient.CommandClient(repository)
-		util.FailOnError(err)
-		images, err := commandClient.ListImages()
-		util.FailOnError(err)
-
-		for _, image := range images {
-			fmt.Fprintln(terminal.Stdout, image)
-		}
+		ListImages(args[0])
 	},
+}
+
+func ListImages(registryName string) {
+	adminClient := NewClient().AdminClient()
+	registry, err := adminClient.GetRegistry(namespace, registryName)
+	util.FailOnError(err)
+	commandClient, err := adminClient.CommandClient(registry)
+	util.FailOnError(err)
+	images, err := commandClient.ListImages()
+	util.FailOnError(err)
+
+	for _, image := range images {
+		fmt.Fprintln(terminal.Stdout, image)
+	}
 }

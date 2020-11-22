@@ -1,6 +1,4 @@
 
 CERT_MANAGER_VERSION=1.0.4
 
-NAMESPACE=mynamespace
-
 WORKSPACE=/tmp/reposure

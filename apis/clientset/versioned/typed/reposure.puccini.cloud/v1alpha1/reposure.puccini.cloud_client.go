@@ -10,7 +10,7 @@ import (
 
 type ReposureV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	RepositoriesGetter
+	RegistriesGetter
 }
 
 // ReposureV1alpha1Client is used to interact with features provided by the reposure.puccini.cloud group.
@@ -18,8 +18,8 @@ type ReposureV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *ReposureV1alpha1Client) Repositories(namespace string) RepositoryInterface {
-	return newRepositories(c, namespace)
+func (c *ReposureV1alpha1Client) Registries(namespace string) RegistryInterface {
+	return newRegistries(c, namespace)
 }
 
 // NewForConfig creates a new ReposureV1alpha1Client for the given config.

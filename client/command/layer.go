@@ -6,11 +6,11 @@ import (
 	"github.com/tliron/kutil/url"
 )
 
-func (self *Client) PullLayer(imageReference string, writer io.Writer) error {
+func (self *Client) PullLayer(imageName string, writer io.Writer) error {
 	pipeReader, pipeWriter := io.Pipe()
 
 	go func() {
-		if err := self.PullTarball(imageReference, pipeWriter); err == nil {
+		if err := self.PullTarball(imageName, pipeWriter); err == nil {
 			pipeWriter.Close()
 		} else {
 			pipeWriter.CloseWithError(err)

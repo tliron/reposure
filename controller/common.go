@@ -1,10 +1,10 @@
 package controller
 
 const (
-	NamePrefix                        = "reposure"
-	PartOf                            = "Reposure"
-	ManagedBy                         = "Reposure"
-	OperatorImageReference            = "tliron/reposure-operator"
-	RepositorySurrogateImageReference = "tliron/reposure-surrogate"
-	RegistryImageReference            = "library/registry"
+	NamePrefix              = "reposure"
+	PartOf                  = "Reposure"
+	ManagedBy               = "Reposure"
+	OperatorImageReference  = "tliron/reposure-operator"
+	SurrogateImageReference = "tliron/reposure-surrogate"
+	SimpleImageReference    = "library/registry"
 )

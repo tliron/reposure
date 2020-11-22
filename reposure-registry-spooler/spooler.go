@@ -10,7 +10,7 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/op/go-logging"
 	"github.com/tliron/kutil/util"
-	registryclient "github.com/tliron/reposure/client/registry"
+	directclient "github.com/tliron/reposure/client/direct"
 )
 
 var log = logging.MustGetLogger("registry-spooler")
@@ -22,7 +22,7 @@ func RunSpooler(registryUrl string, path string) {
 	if certificatePath != "" {
 		log.Infof("certificate path: %s", certificatePath)
 		var err error
-		roundTripper, err = registryclient.TLSRoundTripper(certificatePath)
+		roundTripper, err = directclient.TLSRoundTripper(certificatePath)
 		util.FailOnError(err)
 	}
 

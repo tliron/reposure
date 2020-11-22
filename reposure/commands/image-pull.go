@@ -15,24 +15,25 @@ func init() {
 }
 
 var imagePullCommand = &cobra.Command{
-	Use:   "pull [REPOSITORY NAME] [IMAGE NAME]",
-	Short: "Pull an image from a repository",
+	Use:   "pull [REGISTRY NAME] [IMAGE NAME]",
+	Short: "Pull an image from a registry",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		repositoryName := args[0]
-		imageReference := args[1]
-
-		adminClient := NewClient().AdminClient()
-		repository, err := adminClient.GetRepository(namespace, repositoryName)
-		util.FailOnError(err)
-		commandClient, err := adminClient.CommandClient(repository)
-		util.FailOnError(err)
-
-		if unpack {
-			err = commandClient.PullLayer(imageReference, os.Stdout)
-		} else {
-			err = commandClient.PullTarball(imageReference, os.Stdout)
-		}
-		util.FailOnError(err)
+		PullImage(args[0], args[1])
 	},
+}
+
+func PullImage(registryName string, imageName string) {
+	adminClient := NewClient().AdminClient()
+	registry, err := adminClient.GetRegistry(namespace, registryName)
+	util.FailOnError(err)
+	commandClient, err := adminClient.CommandClient(registry)
+	util.FailOnError(err)
+
+	if unpack {
+		err = commandClient.PullLayer(imageName, os.Stdout)
+	} else {
+		err = commandClient.PullTarball(imageName, os.Stdout)
+	}
+	util.FailOnError(err)
 }

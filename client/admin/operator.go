@@ -13,14 +13,14 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func (self *Client) InstallOperator(registryHost string, wait bool) error {
+func (self *Client) InstallOperator(sourceRegistryHost string, wait bool) error {
 	var err error
 
-	if registryHost, err = self.GetRegistryHost(registryHost); err != nil {
+	if sourceRegistryHost, err = self.GetSourceRegistryHost(sourceRegistryHost); err != nil {
 		return err
 	}
 
-	if _, err = self.createRepositoryCustomResourceDefinition(); err != nil {
+	if _, err = self.createRegistryCustomResourceDefinition(); err != nil {
 		return err
 	}
 
@@ -33,11 +33,13 @@ func (self *Client) InstallOperator(registryHost string, wait bool) error {
 		return err
 	}
 
-	if self.Cluster {
-		if _, err = self.createOperatorAdminClusterRoleBinding(serviceAccount); err != nil {
+	if self.ClusterRole != "" {
+		if _, err = self.createOperatorClusterRoleBinding(serviceAccount, self.ClusterRole); err != nil {
 			return err
 		}
-	} else {
+	}
+
+	if !self.ClusterMode {
 		var role *rbac.Role
 		if role, err = self.createOperatorRole(); err != nil {
 			return err
@@ -45,14 +47,10 @@ func (self *Client) InstallOperator(registryHost string, wait bool) error {
 		if _, err = self.createOperatorRoleBinding(serviceAccount, role); err != nil {
 			return err
 		}
-		// TODO: we only need really this if we want to use registries on other namespaces
-		/*if _, err = self.createOperatorViewClusterRoleBinding(serviceAccount); err != nil {
-			return err
-		}*/
 	}
 
 	var operatorDeployment *apps.Deployment
-	if operatorDeployment, err = self.createOperatorDeployment(registryHost, serviceAccount, 1); err != nil {
+	if operatorDeployment, err = self.createOperatorDeployment(sourceRegistryHost, serviceAccount, 1); err != nil {
 		return err
 	}
 
@@ -78,12 +76,12 @@ func (self *Client) UninstallOperator(wait bool) {
 		self.Log.Warningf("%s", err)
 	}
 
-	if self.Cluster {
-		// Cluster role binding
-		if err := self.Kubernetes.RbacV1().ClusterRoleBindings().Delete(self.Context, self.NamePrefix, deleteOptions); err != nil {
-			self.Log.Warningf("%s", err)
-		}
-	} else {
+	// Cluster role binding
+	if err := self.Kubernetes.RbacV1().ClusterRoleBindings().Delete(self.Context, self.NamePrefix, deleteOptions); err != nil {
+		self.Log.Warningf("%s", err)
+	}
+
+	if !self.ClusterMode {
 		// Role binding
 		if err := self.Kubernetes.RbacV1().RoleBindings(self.Namespace).Delete(self.Context, self.NamePrefix, deleteOptions); err != nil {
 			self.Log.Warningf("%s", err)
@@ -100,8 +98,8 @@ func (self *Client) UninstallOperator(wait bool) {
 		self.Log.Warningf("%s", err)
 	}
 
-	// Repository custom resource definition
-	if err := self.APIExtensions.ApiextensionsV1().CustomResourceDefinitions().Delete(self.Context, resources.RepositoryCustomResourceDefinition.Name, deleteOptions); err != nil {
+	// Registry custom resource definition
+	if err := self.APIExtensions.ApiextensionsV1().CustomResourceDefinitions().Delete(self.Context, resources.RegistryCustomResourceDefinition.Name, deleteOptions); err != nil {
 		self.Log.Warningf("%s", err)
 	}
 
@@ -111,12 +109,11 @@ func (self *Client) UninstallOperator(wait bool) {
 			_, err := self.Kubernetes.AppsV1().Deployments(self.Namespace).Get(self.Context, name, getOptions)
 			return err == nil
 		})
-		if self.Cluster {
-			kubernetes.WaitForDeletion(self.Log, "cluster role binding", func() bool {
-				_, err := self.Kubernetes.RbacV1().ClusterRoleBindings().Get(self.Context, self.NamePrefix, getOptions)
-				return err == nil
-			})
-		} else {
+		kubernetes.WaitForDeletion(self.Log, "cluster role binding", func() bool {
+			_, err := self.Kubernetes.RbacV1().ClusterRoleBindings().Get(self.Context, self.NamePrefix, getOptions)
+			return err == nil
+		})
+		if !self.ClusterMode {
 			kubernetes.WaitForDeletion(self.Log, "role binding", func() bool {
 				_, err := self.Kubernetes.RbacV1().RoleBindings(self.Namespace).Get(self.Context, self.NamePrefix, getOptions)
 				return err == nil
@@ -130,8 +127,8 @@ func (self *Client) UninstallOperator(wait bool) {
 			_, err := self.Kubernetes.CoreV1().ServiceAccounts(self.Namespace).Get(self.Context, self.NamePrefix, getOptions)
 			return err == nil
 		})
-		kubernetes.WaitForDeletion(self.Log, "repository custom resource definition", func() bool {
-			_, err := self.APIExtensions.ApiextensionsV1().CustomResourceDefinitions().Get(self.Context, resources.RepositoryCustomResourceDefinition.Name, getOptions)
+		kubernetes.WaitForDeletion(self.Log, "registry custom resource definition", func() bool {
+			_, err := self.APIExtensions.ApiextensionsV1().CustomResourceDefinitions().Get(self.Context, resources.RegistryCustomResourceDefinition.Name, getOptions)
 			return err == nil
 		})
 	}
@@ -154,8 +151,8 @@ func (self *Client) createOperatorServiceAccount() (*core.ServiceAccount, error)
 	})
 }
 
-func (self *Client) createRepositoryCustomResourceDefinition() (*apiextensions.CustomResourceDefinition, error) {
-	return self.CreateCustomResourceDefinition(&resources.RepositoryCustomResourceDefinition)
+func (self *Client) createRegistryCustomResourceDefinition() (*apiextensions.CustomResourceDefinition, error) {
+	return self.CreateCustomResourceDefinition(&resources.RegistryCustomResourceDefinition)
 }
 
 func (self *Client) createOperatorRole() (*rbac.Role, error) {
@@ -195,7 +192,7 @@ func (self *Client) createOperatorRoleBinding(serviceAccount *core.ServiceAccoun
 	})
 }
 
-func (self *Client) createOperatorAdminClusterRoleBinding(serviceAccount *core.ServiceAccount) (*rbac.ClusterRoleBinding, error) {
+func (self *Client) createOperatorClusterRoleBinding(serviceAccount *core.ServiceAccount, role string) (*rbac.ClusterRoleBinding, error) {
 	return self.CreateClusterRoleBinding(&rbac.ClusterRoleBinding{
 		ObjectMeta: meta.ObjectMeta{
 			Name:   self.NamePrefix,
@@ -211,7 +208,7 @@ func (self *Client) createOperatorAdminClusterRoleBinding(serviceAccount *core.S
 		RoleRef: rbac.RoleRef{
 			APIGroup: rbac.GroupName,
 			Kind:     "ClusterRole",
-			Name:     "cluster-admin",
+			Name:     role,
 		},
 	})
 }

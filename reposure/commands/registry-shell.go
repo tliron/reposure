@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -9,9 +11,10 @@ func init() {
 }
 
 var registryShellCommand = &cobra.Command{
-	Use:   "shell",
-	Short: "Opens a shell to the Reposure container image registry",
+	Use:   "shell [REGISTRY NAME]",
+	Short: "Opens a shell to a registry surrogate",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		Shell("registry", "registry")
+		Shell(fmt.Sprintf("surrogate-%s", args[0]), "surrogate")
 	},
 }

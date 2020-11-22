@@ -34,7 +34,7 @@ func Controller() {
 	config, err := clientcmd.BuildConfigFromFlags(masterUrl, kubeconfigPath)
 	util.FailOnError(err)
 
-	if cluster {
+	if clusterMode {
 		namespace = ""
 	} else if namespace == "" {
 		if namespace_, ok := kubernetes.GetConfiguredNamespace(kubeconfigPath, context); ok {
@@ -66,7 +66,8 @@ func Controller() {
 
 	controller := controllerpkg.NewController(
 		toolName,
-		cluster,
+		clusterMode,
+		clusterRole,
 		namespace,
 		dynamicClient,
 		kubernetesClient,

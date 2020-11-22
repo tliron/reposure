@@ -6,14 +6,26 @@ HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
 . "$HERE/_env"
 . "$ROOT/scripts/_trap"
 
+PROVIDER=${PROVIDER:-simple}
+NAMESPACE=${NAMESPACE:-mynamespace}
+REPOSITORY=${REPOSITORY:-catalog}
+
+if [ "$PROVIDER" == openshift ]; then
+	REPOSITORY=$NAMESPACE
+fi
+
+m "provider: $PROVIDER"
+
 mkdir --parents "$WORKSPACE"
 
 m 'cleaning up...'
 
 kubectl create namespace "$NAMESPACE" || true
 kubectl config set-context --current --namespace="$NAMESPACE"
-reposure operator uninstall --wait
-reposure registry uninstall --wait
+
+kubectl delete pods hello-world || true
+reposure operator uninstall --wait -v
+reposure simple uninstall --wait -v
 kubectl delete events --all
 
 if [ "$1" == '-b' ]; then
@@ -23,11 +35,17 @@ fi
 
 m 'installing operator...'
 
-reposure operator install --wait
+if [ "$PROVIDER" == minikube ] || [ "$PROVIDER" == openshift ]; then
+	reposure operator install --role=view --wait -v
+else
+	reposure operator install --wait -v
+fi
 
-m 'installing registry...'
+if [ "$PROVIDER" == simple ]; then
+	m 'installing simple registry...'
 
-reposure registry install --wait
+	reposure simple install --wait
+fi
 
 #m 'deploying authentication secret...'
 
@@ -37,40 +55,51 @@ reposure registry install --wait
 #htpasswd -cbB "$WORKSPACE/registry-htpasswd" username password
 #kubectl create secret generic registry-auth --from-file="$WORKSPACE/registry-htpasswd"
 
-m 'creating repository...'
+m 'creating registry...'
 
-reposure repository create default --provider=reposure --wait
+reposure registry create default --provider="$PROVIDER" --wait -v
 
-m 'pushing text file to "catalog/hello"'
+m "pushing text file to \"$REPOSITORY/hello\""
 
 echo 'hello world' > "$WORKSPACE/hello.txt"
-reposure image push default catalog/hello "$WORKSPACE/hello.txt"
+reposure image push default "$REPOSITORY/hello" "$WORKSPACE/hello.txt" -v
 
 sleep 1
 
-m 'pulling text file from "catalog/hello"'
+m "pulling text file from \"$REPOSITORY/hello\""
 
-reposure image pull default catalog/hello
+reposure image pull default "$REPOSITORY/hello" --unpack -v
 
 m 'creating container image tarball'
 
-podman rmi localhost:5000/catalog/myimage || true
-podman rmi docker.io/library/hello-world || true
-podman pull docker.io/library/hello-world
-podman tag docker.io/library/hello-world localhost:5000/catalog/myimage
-rm --force "$WORKSPACE/myimage.tar"
-podman save localhost:5000/catalog/myimage --output "$WORKSPACE/myimage.tar"
+HOST=$(reposure registry info default host)
+PUBLIC_IMAGE=docker.io/paulbouwer/hello-kubernetes:1.8
+PRIVATE_IMAGE=$HOST/$REPOSITORY/myimage
+IMAGE_FILE=$WORKSPACE/myimage.tar
 
-m 'pushing container image tarball to "catalog/myimage"'
+podman rmi "$PRIVATE_IMAGE" || true
+podman rmi "$PUBLIC_IMAGE" || true
+podman pull "$PUBLIC_IMAGE"
+podman tag "$PUBLIC_IMAGE" "$PRIVATE_IMAGE"
+rm --force "$IMAGE_FILE"
+podman save "$PRIVATE_IMAGE" --output "$IMAGE_FILE"
 
-reposure image push default catalog/myimage "$WORKSPACE/myimage.tar"
+m "pushing container image tarball to \"$REPOSITORY/myimage\""
+
+reposure image push default "$REPOSITORY/myimage" "$IMAGE_FILE" -v
 
 sleep 3
 
-m 'pulling container image tarball from "catalog/myimage"'
+m "pulling container image tarball from \"$REPOSITORY/myimage\""
 
-reposure image pull default catalog/myimage > "$WORKSPACE/myimage-pulled.tar"
+reposure image pull default "$REPOSITORY/myimage" > "$WORKSPACE/myimage-pulled.tar" -v
+
+m "creating \"hello-world\" pod"
+
+IMAGE=$PRIVATE_IMAGE envsubst < "$ROOT/assets/kubernetes/hello-world.yaml" | \
+kubectl apply -f -
 
 m 'listing images'
 
-reposure image list default
+# Not permitted on OpenShift
+reposure image list default -v

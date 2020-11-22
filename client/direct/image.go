@@ -1,8 +1,7 @@
-package registry
+package direct
 
 import (
 	"fmt"
-	"os"
 
 	namepkg "github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -22,22 +21,18 @@ func (self *Client) ListImages(registryHost string) ([]string, error) {
 							imageReferences = append(imageReferences, repositoryImageReference)
 						}
 					} else {
-						fmt.Fprintln(os.Stderr, "1")
 						return nil, err
 					}
 				} else {
-					fmt.Fprintln(os.Stderr, "2")
 					return nil, err
 				}
 			}
 
 			return imageReferences, nil
 		} else {
-			fmt.Fprintln(os.Stderr, "3")
 			return nil, err
 		}
 	} else {
-		fmt.Fprintln(os.Stderr, "4")
 		return nil, err
 	}
 }

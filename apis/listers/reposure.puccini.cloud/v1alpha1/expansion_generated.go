@@ -2,10 +2,10 @@
 
 package v1alpha1
 
-// RepositoryListerExpansion allows custom methods to be added to
-// RepositoryLister.
-type RepositoryListerExpansion interface{}
+// RegistryListerExpansion allows custom methods to be added to
+// RegistryLister.
+type RegistryListerExpansion interface{}
 
-// RepositoryNamespaceListerExpansion allows custom methods to be added to
-// RepositoryNamespaceLister.
-type RepositoryNamespaceListerExpansion interface{}
+// RegistryNamespaceListerExpansion allows custom methods to be added to
+// RegistryNamespaceLister.
+type RegistryNamespaceListerExpansion interface{}

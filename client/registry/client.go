@@ -2,10 +2,12 @@ package registry
 
 import (
 	contextpkg "context"
-	"net/http"
 
-	"github.com/google/go-containerregistry/pkg/authn"
-	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/op/go-logging"
+	reposurepkg "github.com/tliron/reposure/apis/clientset/versioned"
+	resources "github.com/tliron/reposure/resources/reposure.puccini.cloud/v1alpha1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kubernetespkg "k8s.io/client-go/kubernetes"
 )
 
 //
@@ -13,30 +15,40 @@ import (
 //
 
 type Client struct {
-	Secure  bool
-	Options []remote.Option
-	Context contextpkg.Context
+	Kubernetes kubernetespkg.Interface
+	Reposure   reposurepkg.Interface
+	Context    contextpkg.Context
+	Log        *logging.Logger
+
+	Namespace    string
+	TLSMountPath string
 }
 
-func NewClient(transport http.RoundTripper, username string, password string, token string) *Client {
-	var options []remote.Option
-
-	if transport != nil {
-		options = append(options, remote.WithTransport(transport))
-	}
-
-	if (username != "") || (token != "") {
-		authenticator := authn.FromConfig(authn.AuthConfig{
-			Username:      username,
-			Password:      password,
-			RegistryToken: token,
-		})
-		options = append(options, remote.WithAuth(authenticator))
-	}
-
+func NewClient(kubernetes kubernetespkg.Interface, reposure reposurepkg.Interface, context contextpkg.Context, log *logging.Logger, namespace string, tlsMountPath string) *Client {
 	return &Client{
-		Secure:  transport != nil,
-		Options: options,
-		Context: contextpkg.TODO(),
+		Kubernetes:   kubernetes,
+		Reposure:     reposure,
+		Context:      context,
+		Log:          log,
+		Namespace:    namespace,
+		TLSMountPath: tlsMountPath,
+	}
+}
+
+func (self *Client) Get(namespace string, registryName string) (*resources.Registry, error) {
+	// Default to same namespace as operator
+	if namespace == "" {
+		namespace = self.Namespace
+	}
+
+	if registry, err := self.Reposure.ReposureV1alpha1().Registries(namespace).Get(self.Context, registryName, meta.GetOptions{}); err == nil {
+		// When retrieved from cache the GVK may be empty
+		if registry.Kind == "" {
+			registry = registry.DeepCopy()
+			registry.APIVersion, registry.Kind = resources.RegistryGVK.ToAPIVersionAndKind()
+		}
+		return registry, nil
+	} else {
+		return nil, err
 	}
 }
