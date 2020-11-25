@@ -13,8 +13,9 @@ var host string
 var serviceNamespace string
 var service string
 var port uint64
-var tlsSecret string
-var tlsSecretDataKey string
+var authenticationSecret string
+var authenticationSecretDataKey string
+var authorizationSecret string
 var provider string
 
 func init() {
@@ -23,8 +24,9 @@ func init() {
 	registryCreateCommand.Flags().StringVarP(&serviceNamespace, "service-namespace", "", "", "registry service namespace name (defaults to registry namespace)")
 	registryCreateCommand.Flags().StringVarP(&service, "service", "", "", "registry service name")
 	registryCreateCommand.Flags().Uint64VarP(&port, "port", "", 5000, "registry service port")
-	registryCreateCommand.Flags().StringVarP(&tlsSecret, "tls-secret", "", "", "registry TLS secret name")
-	registryCreateCommand.Flags().StringVarP(&tlsSecretDataKey, "tls-secret-data-key", "", "", "registry TLS secret data key name")
+	registryCreateCommand.Flags().StringVarP(&authenticationSecret, "authentication-secret", "", "", "registry authentication secret name")
+	registryCreateCommand.Flags().StringVarP(&authenticationSecretDataKey, "authentication-secret-data-key", "", "", "registry authentication secret data key name")
+	registryCreateCommand.Flags().StringVarP(&authorizationSecret, "authorization-secret", "", "", "registry authorization secret name")
 	registryCreateCommand.Flags().StringVarP(&provider, "provider", "", "", "registry provider (\"simple\", \"minikube\", or \"openshift\")")
 	registryCreateCommand.Flags().BoolVarP(&wait, "wait", "w", false, "wait for registry surrogate to come up")
 }
@@ -39,8 +41,6 @@ var registryCreateCommand = &cobra.Command{
 }
 
 func CreateRegistry(registryName string) {
-	var authSecret string
-
 	if (host == "") && (service == "") && (provider == "") {
 		failRegistryCreate()
 	}
@@ -63,8 +63,8 @@ func CreateRegistry(registryName string) {
 		switch provider {
 		case "simple":
 			service = "reposure-simple"
-			if tlsSecret == "" {
-				tlsSecret = "reposure-simple"
+			if authenticationSecret == "" {
+				authenticationSecret = "reposure-simple-authentication"
 			}
 
 		case "minikube":
@@ -80,7 +80,7 @@ func CreateRegistry(registryName string) {
 
 		case "openshift":
 			host = "image-registry.openshift-image-registry.svc:5000"
-			if (tlsSecret == "") || (authSecret == "") {
+			if (authenticationSecret == "") || (authorizationSecret == "") {
 				// We will use the "builder" service account's service-ca certificate and auth token
 				serviceAccount, err := client.Kubernetes.CoreV1().ServiceAccounts(client.Namespace).Get(contextpkg.TODO(), "builder", meta.GetOptions{})
 				util.FailOnError(err)
@@ -88,14 +88,14 @@ func CreateRegistry(registryName string) {
 					secret, err := client.Kubernetes.CoreV1().Secrets(client.Namespace).Get(contextpkg.TODO(), secretName.Name, meta.GetOptions{})
 					util.FailOnError(err)
 					if secret.Type == core.SecretTypeServiceAccountToken {
-						if tlsSecret == "" {
-							tlsSecret = secret.Name
+						if authenticationSecret == "" {
+							authenticationSecret = secret.Name
 						}
-						if tlsSecretDataKey == "" {
-							tlsSecretDataKey = "service-ca.crt"
+						if authenticationSecretDataKey == "" {
+							authenticationSecretDataKey = "service-ca.crt"
 						}
-						if authSecret == "" {
-							authSecret = secret.Name
+						if authorizationSecret == "" {
+							authorizationSecret = secret.Name
 						}
 						break
 					}
@@ -111,9 +111,9 @@ func CreateRegistry(registryName string) {
 
 	var err error
 	if service != "" {
-		_, err = adminClient.CreateRegistryIndirect(namespace, registryName, serviceNamespace, service, port, tlsSecret, tlsSecretDataKey, authSecret)
+		_, err = adminClient.CreateRegistryIndirect(namespace, registryName, serviceNamespace, service, port, authenticationSecret, authenticationSecretDataKey, authorizationSecret)
 	} else {
-		_, err = adminClient.CreateRegistryDirect(namespace, registryName, host, tlsSecret, tlsSecretDataKey, authSecret)
+		_, err = adminClient.CreateRegistryDirect(namespace, registryName, host, authenticationSecret, authenticationSecretDataKey, authorizationSecret)
 	}
 	util.FailOnError(err)
 

@@ -69,10 +69,10 @@ func (self *Client) UninstallOperator(wait bool) {
 		GracePeriodSeconds: &gracePeriodSeconds,
 	}
 
-	name := fmt.Sprintf("%s-operator", self.NamePrefix)
+	appName := fmt.Sprintf("%s-operator", self.NamePrefix)
 
 	// Deployment
-	if err := self.Kubernetes.AppsV1().Deployments(self.Namespace).Delete(self.Context, name, deleteOptions); err != nil {
+	if err := self.Kubernetes.AppsV1().Deployments(self.Namespace).Delete(self.Context, appName, deleteOptions); err != nil {
 		self.Log.Warningf("%s", err)
 	}
 
@@ -106,7 +106,7 @@ func (self *Client) UninstallOperator(wait bool) {
 	if wait {
 		getOptions := meta.GetOptions{}
 		kubernetes.WaitForDeletion(self.Log, "operator deployment", func() bool {
-			_, err := self.Kubernetes.AppsV1().Deployments(self.Namespace).Get(self.Context, name, getOptions)
+			_, err := self.Kubernetes.AppsV1().Deployments(self.Namespace).Get(self.Context, appName, getOptions)
 			return err == nil
 		})
 		kubernetes.WaitForDeletion(self.Log, "cluster role binding", func() bool {

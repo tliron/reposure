@@ -12,7 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func (self *Client) InstallRegistry(sourceRegistryHost string, secure bool, wait bool) error {
+func (self *Client) InstallSimple(sourceRegistryHost string, authentication bool, authorization bool, wait bool) error {
 	var err error
 
 	if sourceRegistryHost, err = self.GetSourceRegistryHost(sourceRegistryHost); err != nil {
@@ -25,26 +25,26 @@ func (self *Client) InstallRegistry(sourceRegistryHost string, secure bool, wait
 	}
 
 	var registryDeployment *apps.Deployment
-	if registryDeployment, err = self.createRegistryDeployment(sourceRegistryHost, serviceAccount, 1, secure); err != nil {
+	if registryDeployment, err = self.createSimpleDeployment(sourceRegistryHost, serviceAccount, 1, authentication, authorization); err != nil {
 		return err
 	}
 
 	var service *core.Service
-	if service, err = self.createRegistryService(); err != nil {
+	if service, err = self.createSimpleService(); err != nil {
 		return err
 	}
 
-	if secure {
+	if authentication {
 		if err = self.GetCertManager(); err != nil {
 			self.Log.Warningf("%s", err.Error())
 		}
 
 		var issuer *certmanager.Issuer
-		if issuer, err = self.createRegistryCertificateIssuer(); err != nil {
+		if issuer, err = self.createSimpleCertificateIssuer(); err != nil {
 			return err
 		}
 
-		if _, err = self.createRegistryCertificate(issuer, service); err != nil {
+		if _, err = self.createSimpleCertificate(issuer, service); err != nil {
 			return err
 		}
 	}
@@ -58,21 +58,22 @@ func (self *Client) InstallRegistry(sourceRegistryHost string, secure bool, wait
 	return nil
 }
 
-func (self *Client) UninstallRegistry(wait bool) {
+func (self *Client) UninstallSimple(wait bool) {
 	var gracePeriodSeconds int64 = 0
 	deleteOptions := meta.DeleteOptions{
 		GracePeriodSeconds: &gracePeriodSeconds,
 	}
 
-	name := fmt.Sprintf("%s-simple", self.NamePrefix)
+	appName := fmt.Sprintf("%s-simple", self.NamePrefix)
+	secretName := fmt.Sprintf("%s-authentication", appName)
 
 	// Service
-	if err := self.Kubernetes.CoreV1().Services(self.Namespace).Delete(self.Context, name, deleteOptions); err != nil {
+	if err := self.Kubernetes.CoreV1().Services(self.Namespace).Delete(self.Context, appName, deleteOptions); err != nil {
 		self.Log.Warningf("%s", err)
 	}
 
 	// Deployment
-	if err := self.Kubernetes.AppsV1().Deployments(self.Namespace).Delete(self.Context, name, deleteOptions); err != nil {
+	if err := self.Kubernetes.AppsV1().Deployments(self.Namespace).Delete(self.Context, appName, deleteOptions); err != nil {
 		self.Log.Warningf("%s", err)
 	}
 
@@ -81,46 +82,60 @@ func (self *Client) UninstallRegistry(wait bool) {
 	}
 
 	// Certificate
-	if err := self.CertManager.CertmanagerV1().Certificates(self.Namespace).Delete(self.Context, name, deleteOptions); err != nil {
+	if err := self.CertManager.CertmanagerV1().Certificates(self.Namespace).Delete(self.Context, appName, deleteOptions); err != nil {
 		self.Log.Warningf("%s", err)
 	}
 
 	// Issuer
-	if err := self.CertManager.CertmanagerV1().Issuers(self.Namespace).Delete(self.Context, name, deleteOptions); err != nil {
+	if err := self.CertManager.CertmanagerV1().Issuers(self.Namespace).Delete(self.Context, appName, deleteOptions); err != nil {
 		self.Log.Warningf("%s", err)
 	}
 
 	// Secret (deleting the Certificate will not delete the Secret!)
-	if err := self.Kubernetes.CoreV1().Secrets(self.Namespace).Delete(self.Context, name, deleteOptions); err != nil {
+	if err := self.Kubernetes.CoreV1().Secrets(self.Namespace).Delete(self.Context, secretName, deleteOptions); err != nil {
 		self.Log.Warningf("%s", err)
 	}
 
 	if wait {
 		getOptions := meta.GetOptions{}
-		kubernetes.WaitForDeletion(self.Log, "registry service", func() bool {
-			_, err := self.Kubernetes.CoreV1().Services(self.Namespace).Get(self.Context, name, getOptions)
+		kubernetes.WaitForDeletion(self.Log, "simple service", func() bool {
+			_, err := self.Kubernetes.CoreV1().Services(self.Namespace).Get(self.Context, appName, getOptions)
 			return err == nil
 		})
-		kubernetes.WaitForDeletion(self.Log, "registry deployment", func() bool {
-			_, err := self.Kubernetes.AppsV1().Deployments(self.Namespace).Get(self.Context, name, getOptions)
+		kubernetes.WaitForDeletion(self.Log, "simple deployment", func() bool {
+			_, err := self.Kubernetes.AppsV1().Deployments(self.Namespace).Get(self.Context, appName, getOptions)
 			return err == nil
 		})
-		kubernetes.WaitForDeletion(self.Log, "registry certificate", func() bool {
-			_, err := self.CertManager.CertmanagerV1().Certificates(self.Namespace).Get(self.Context, name, getOptions)
+		kubernetes.WaitForDeletion(self.Log, "simple certificate", func() bool {
+			_, err := self.CertManager.CertmanagerV1().Certificates(self.Namespace).Get(self.Context, appName, getOptions)
 			return err == nil
 		})
-		kubernetes.WaitForDeletion(self.Log, "registry issuer", func() bool {
-			_, err := self.CertManager.CertmanagerV1().Issuers(self.Namespace).Get(self.Context, name, getOptions)
+		kubernetes.WaitForDeletion(self.Log, "simple issuer", func() bool {
+			_, err := self.CertManager.CertmanagerV1().Issuers(self.Namespace).Get(self.Context, appName, getOptions)
 			return err == nil
 		})
-		kubernetes.WaitForDeletion(self.Log, "registry secret", func() bool {
-			_, err := self.Kubernetes.CoreV1().Secrets(self.Namespace).Get(self.Context, name, getOptions)
+		kubernetes.WaitForDeletion(self.Log, "simple authentication secret", func() bool {
+			_, err := self.Kubernetes.CoreV1().Secrets(self.Namespace).Get(self.Context, secretName, getOptions)
 			return err == nil
 		})
 	}
 }
 
-func (self *Client) createRegistryDeployment(registryAddress string, serviceAccount *core.ServiceAccount, replicas int32, secure bool) (*apps.Deployment, error) {
+func (self *Client) SimpleService() (*core.Service, error) {
+	appName := fmt.Sprintf("%s-simple", self.NamePrefix)
+
+	return self.Kubernetes.CoreV1().Services(self.Namespace).Get(self.Context, appName, meta.GetOptions{})
+}
+
+func (self *Client) SimpleHost() (string, error) {
+	if service, err := self.SimpleService(); err == nil {
+		return fmt.Sprintf("%s:5000", service.Spec.ClusterIP), nil
+	} else {
+		return "", err
+	}
+}
+
+func (self *Client) createSimpleDeployment(registryAddress string, serviceAccount *core.ServiceAccount, replicas int32, authentication bool, authorization bool) (*apps.Deployment, error) {
 	// https://hub.docker.com/_/registry
 	// https://github.com/ContainerSolutions/trow
 	// https://github.com/google/go-containerregistry
@@ -189,7 +204,9 @@ func (self *Client) createRegistryDeployment(registryAddress string, serviceAcco
 		},
 	}
 
-	if secure {
+	if authentication {
+		secretName := fmt.Sprintf("%s-authentication", appName)
+
 		deployment.Spec.Template.Spec.Containers[0].VolumeMounts = append(deployment.Spec.Template.Spec.Containers[0].VolumeMounts, core.VolumeMount{
 			Name:      "tls",
 			MountPath: tlsMountPath,
@@ -214,7 +231,39 @@ func (self *Client) createRegistryDeployment(registryAddress string, serviceAcco
 			Name: "tls",
 			VolumeSource: core.VolumeSource{
 				Secret: &core.SecretVolumeSource{
-					SecretName: appName,
+					SecretName: secretName,
+				},
+			},
+		})
+	}
+
+	if authorization {
+		deployment.Spec.Template.Spec.Containers[0].VolumeMounts = append(deployment.Spec.Template.Spec.Containers[0].VolumeMounts, core.VolumeMount{
+			Name:      "htpasswd",
+			MountPath: htpasswdMountPath,
+			ReadOnly:  true,
+		})
+
+		deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env,
+			core.EnvVar{
+				Name:  "REGISTRY_AUTH",
+				Value: "htpasswd",
+			},
+			core.EnvVar{
+				Name:  "REGISTRY_AUTH_HTPASSWD_PATH",
+				Value: htpasswdPath,
+			},
+			core.EnvVar{
+				Name:  "REGISTRY_AUTH_HTPASSWD_REALM",
+				Value: "Registry",
+			},
+		)
+
+		deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, core.Volume{
+			Name: "htpasswd",
+			VolumeSource: core.VolumeSource{
+				Secret: &core.SecretVolumeSource{
+					SecretName: "reposure-simple-htpasswd",
 				},
 			},
 		})
@@ -223,7 +272,7 @@ func (self *Client) createRegistryDeployment(registryAddress string, serviceAcco
 	return self.CreateDeployment(deployment)
 }
 
-func (self *Client) createRegistryService() (*core.Service, error) {
+func (self *Client) createSimpleService() (*core.Service, error) {
 	appName := fmt.Sprintf("%s-simple", self.NamePrefix)
 	labels := self.Labels(appName, "simple", self.Namespace)
 
@@ -249,7 +298,7 @@ func (self *Client) createRegistryService() (*core.Service, error) {
 	return self.CreateService(service)
 }
 
-func (self *Client) createRegistryCertificateIssuer() (*certmanager.Issuer, error) {
+func (self *Client) createSimpleCertificateIssuer() (*certmanager.Issuer, error) {
 	appName := fmt.Sprintf("%s-simple", self.NamePrefix)
 
 	issuer := &certmanager.Issuer{
@@ -267,8 +316,9 @@ func (self *Client) createRegistryCertificateIssuer() (*certmanager.Issuer, erro
 	return self.CreateCertificateIssuer(issuer)
 }
 
-func (self *Client) createRegistryCertificate(issuer *certmanager.Issuer, service *core.Service) (*certmanager.Certificate, error) {
+func (self *Client) createSimpleCertificate(issuer *certmanager.Issuer, service *core.Service) (*certmanager.Certificate, error) {
 	appName := fmt.Sprintf("%s-simple", self.NamePrefix)
+	secretName := fmt.Sprintf("%s-authentication", appName)
 	ipAddress := service.Spec.ClusterIP
 
 	certificate := &certmanager.Certificate{
@@ -277,7 +327,7 @@ func (self *Client) createRegistryCertificate(issuer *certmanager.Issuer, servic
 			Labels: self.Labels(appName, "simple", self.Namespace),
 		},
 		Spec: certmanager.CertificateSpec{
-			SecretName:  appName,
+			SecretName:  secretName,
 			IPAddresses: []string{ipAddress},
 			URIs:        []string{"https://reposure.puccini.cloud"},
 			IssuerRef: certmanagermeta.ObjectReference{
@@ -290,8 +340,8 @@ func (self *Client) createRegistryCertificate(issuer *certmanager.Issuer, servic
 }
 
 /*
-func (self *Client) createRegistryConfigMap() (*core.ConfigMap, error) {
-	appName := fmt.Sprintf("%s-registry", self.NamePrefix)
+func (self *Client) createSimpleConfigMap() (*core.ConfigMap, error) {
+	appName := fmt.Sprintf("%s-simple", self.NamePrefix)
 	instanceName := fmt.Sprintf("%s-%s", appName, self.Namespace)
 
 	configMap := &core.ConfigMap{
@@ -323,7 +373,7 @@ func (self *Client) createRegistryImagePullSecret(server string, username string
 	//      https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 	//      https://docs.docker.com/engine/reference/commandline/cli/#configjson-properties
 
-	appName := fmt.Sprintf("%s-registry", self.NamePrefix)
+	appName := fmt.Sprintf("%s-simple", self.NamePrefix)
 	instanceName := fmt.Sprintf("%s-%s", appName, self.Namespace)
 
 	secret := &core.Secret{
@@ -358,7 +408,7 @@ func (self *Client) createRegistryImagePullSecret(server string, username string
 //      https://cert-manager.io/docs/
 
 func (self *Client) createRegistryTlsSecret() (*core.Secret, error) {
-	appName := fmt.Sprintf("%s-registry", self.NamePrefix)
+	appName := fmt.Sprintf("%s-simple", self.NamePrefix)
 	instanceName := fmt.Sprintf("%s-%s", appName, self.Namespace)
 
 	var crt []byte

@@ -18,5 +18,5 @@ var simpleUninstallCommand = &cobra.Command{
 }
 
 func UninstallRegistry() {
-	NewClient().AdminClient().UninstallRegistry(wait)
+	NewClient().AdminClient().UninstallSimple(wait)
 }

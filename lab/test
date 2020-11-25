@@ -24,6 +24,8 @@ kubectl create namespace "$NAMESPACE" || true
 kubectl config set-context --current --namespace="$NAMESPACE"
 
 kubectl delete pods hello-world || true
+kubectl delete secret reposure-simple-htpasswd || true
+kubectl delete secret reposure-simple-authorization || true
 reposure operator uninstall --wait -v
 reposure simple uninstall --wait -v
 kubectl delete events --all
@@ -42,22 +44,33 @@ else
 fi
 
 if [ "$PROVIDER" == simple ]; then
+	m 'creating htpasswd secret...'
+
+	rm --recursive --force "$WORKSPACE/htpasswd"
+	# Note: Docker registry requires bcrypt
+	# https://docs.docker.com/registry/configuration/#htpasswd
+	htpasswd -cbB "$WORKSPACE/htpasswd" username password
+	kubectl create secret generic reposure-simple-htpasswd --from-file="$WORKSPACE/htpasswd"
+
 	m 'installing simple registry...'
 
-	reposure simple install --wait
+	# Authentication requires Cert-Manager
+	# Authorization requires "reposure-simple-htpasswd" secret 
+	reposure simple install --authentication --authorization --wait
+
+	m 'creating authorization secret...'
+
+	HOST=$(reposure simple host)
+	kubectl create secret docker-registry reposure-simple-authorization --docker-server="$HOST" --docker-username=username --docker-password=password
 fi
-
-#m 'deploying authentication secret...'
-
-#rm --recursive --force "$WORKSPACE/registry-htpasswd"
-# Note: Docker registry requires bcrypt
-# https://docs.docker.com/registry/configuration/#htpasswd
-#htpasswd -cbB "$WORKSPACE/registry-htpasswd" username password
-#kubectl create secret generic registry-auth --from-file="$WORKSPACE/registry-htpasswd"
 
 m 'creating registry...'
 
-reposure registry create default --provider="$PROVIDER" --wait -v
+if [ "$PROVIDER" == simple ]; then
+	reposure registry create default --provider="$PROVIDER" --authorization-secret=reposure-simple-authorization --wait -v
+else
+	reposure registry create default --provider="$PROVIDER" --wait -v
+fi
 
 m "pushing text file to \"$REPOSITORY/hello\""
 
@@ -88,16 +101,21 @@ m "pushing container image tarball to \"$REPOSITORY/myimage\""
 
 reposure image push default "$REPOSITORY/myimage" "$IMAGE_FILE" -v
 
-sleep 3
+sleep 8
 
 m "pulling container image tarball from \"$REPOSITORY/myimage\""
 
-reposure image pull default "$REPOSITORY/myimage" > "$WORKSPACE/myimage-pulled.tar" -v
+reposure image pull default "$REPOSITORY/myimage" -v > "$WORKSPACE/myimage-pulled.tar"
 
 m "creating \"hello-world\" pod"
 
-IMAGE=$PRIVATE_IMAGE envsubst < "$ROOT/assets/kubernetes/hello-world.yaml" | \
-kubectl apply -f -
+if [ "$PROVIDER" == simple ]; then
+	IMAGE=$PRIVATE_IMAGE SECRET=reposure-simple-authorization envsubst < "$ROOT/assets/kubernetes/hello-world-with-secret.yaml" | \
+	kubectl apply -f -
+else
+	IMAGE=$PRIVATE_IMAGE envsubst < "$ROOT/assets/kubernetes/hello-world.yaml" | \
+	kubectl apply -f -
+fi
 
 m 'listing images'
 
