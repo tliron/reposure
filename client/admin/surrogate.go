@@ -84,7 +84,7 @@ func (self *Client) CreateRegistrySurrogate(registry *resources.Registry) (*core
 	if registry.Spec.AuthenticationSecret != "" {
 		pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, core.VolumeMount{
 			Name:      "tls",
-			MountPath: tlsMountPath,
+			MountPath: registryClient.TLSMountPath,
 			ReadOnly:  true,
 		})
 

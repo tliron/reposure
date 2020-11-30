@@ -12,8 +12,27 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const simpleHtpasswdMountPath = "/htpasswd"
+
+var simpleTlsCertificatePath = fmt.Sprintf("%s/%s", tlsMountPath, core.TLSCertKey)
+var simpleTlsKeyPath = fmt.Sprintf("%s/%s", tlsMountPath, core.TLSPrivateKeyKey)
+var simpleHtpasswdPath = fmt.Sprintf("%s/htpasswd", simpleHtpasswdMountPath)
+
 func (self *Client) InstallSimple(sourceRegistryHost string, authentication bool, authorization bool, wait bool) error {
+	// Authentication requires Cert-Manager: https://github.com/jetstack/cert-manager
+
+	// Authorization expects a generic secret named "reposure-simple-htpasswd",
+	// which is a file named htpasswd in htpasswd format that uses bcrypt for passwords
+	// E.g.: htpasswd -cbB
+	// See: https://docs.docker.com/registry/configuration/#htpasswd
+
 	var err error
+
+	if authentication {
+		if err = self.GetCertManager(); err != nil {
+			return err
+		}
+	}
 
 	if sourceRegistryHost, err = self.GetSourceRegistryHost(sourceRegistryHost); err != nil {
 		return err
@@ -35,10 +54,6 @@ func (self *Client) InstallSimple(sourceRegistryHost string, authentication bool
 	}
 
 	if authentication {
-		if err = self.GetCertManager(); err != nil {
-			self.Log.Warningf("%s", err.Error())
-		}
-
 		var issuer *certmanager.Issuer
 		if issuer, err = self.createSimpleCertificateIssuer(); err != nil {
 			return err
@@ -216,11 +231,11 @@ func (self *Client) createSimpleDeployment(registryAddress string, serviceAccoun
 		deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env,
 			core.EnvVar{
 				Name:  "REGISTRY_HTTP_TLS_CERTIFICATE",
-				Value: tlsCertificatePath,
+				Value: simpleTlsCertificatePath,
 			},
 			core.EnvVar{
 				Name:  "REGISTRY_HTTP_TLS_KEY",
-				Value: tlsKeyPath,
+				Value: simpleTlsKeyPath,
 			},
 		)
 
@@ -240,7 +255,7 @@ func (self *Client) createSimpleDeployment(registryAddress string, serviceAccoun
 	if authorization {
 		deployment.Spec.Template.Spec.Containers[0].VolumeMounts = append(deployment.Spec.Template.Spec.Containers[0].VolumeMounts, core.VolumeMount{
 			Name:      "htpasswd",
-			MountPath: htpasswdMountPath,
+			MountPath: simpleHtpasswdMountPath,
 			ReadOnly:  true,
 		})
 
@@ -251,7 +266,7 @@ func (self *Client) createSimpleDeployment(registryAddress string, serviceAccoun
 			},
 			core.EnvVar{
 				Name:  "REGISTRY_AUTH_HTPASSWD_PATH",
-				Value: htpasswdPath,
+				Value: simpleHtpasswdPath,
 			},
 			core.EnvVar{
 				Name:  "REGISTRY_AUTH_HTPASSWD_REALM",

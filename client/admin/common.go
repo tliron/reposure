@@ -16,6 +16,8 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const tlsMountPath = "/tls"
+
 func (self *Client) GetSourceRegistryHost(host string) (string, error) {
 	if host == "internal" {
 		if registry, err := kubernetes.GetInternalRegistryHost(self.Context, self.Kubernetes); err == nil {

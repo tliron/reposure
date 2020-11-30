@@ -50,7 +50,8 @@ if [ "$PROVIDER" == simple ]; then
 	# Note: Docker registry requires bcrypt
 	# https://docs.docker.com/registry/configuration/#htpasswd
 	htpasswd -cbB "$WORKSPACE/htpasswd" username password
-	kubectl create secret generic reposure-simple-htpasswd --from-file="$WORKSPACE/htpasswd"
+	kubectl create secret generic reposure-simple-htpasswd \
+		--from-file="$WORKSPACE/htpasswd"
 
 	m 'installing simple registry...'
 
@@ -61,7 +62,10 @@ if [ "$PROVIDER" == simple ]; then
 	m 'creating authorization secret...'
 
 	HOST=$(reposure simple host)
-	kubectl create secret docker-registry reposure-simple-authorization --docker-server="$HOST" --docker-username=username --docker-password=password
+	kubectl create secret docker-registry reposure-simple-authorization \
+		--docker-server="$HOST" \
+		--docker-username=username \
+		--docker-password=password
 fi
 
 m 'creating registry...'
