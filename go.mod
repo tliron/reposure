@@ -7,7 +7,7 @@ go 1.15
 require (
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gofrs/flock v0.8.0
-	github.com/google/go-containerregistry v0.1.4
+	github.com/google/go-containerregistry v0.2.1
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
 	github.com/jetstack/cert-manager v1.1.0
 	github.com/klauspost/pgzip v1.2.5
