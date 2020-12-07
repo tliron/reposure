@@ -2,6 +2,7 @@ package commands
 
 import (
 	contextpkg "context"
+	"fmt"
 
 	kubernetesutil "github.com/tliron/kutil/kubernetes"
 	"github.com/tliron/kutil/util"
@@ -26,7 +27,7 @@ type Client struct {
 }
 
 func NewClient() *Client {
-	config, err := kubernetesutil.NewConfigFromFlags(masterUrl, kubeconfigPath, context, log)
+	config, err := kubernetesutil.NewConfigFromFlags(masterUrl, kubeconfigPath, kubeconfigContext, log)
 	util.FailOnError(err)
 
 	kubernetes, err := kubernetespkg.NewForConfig(config)
@@ -36,7 +37,7 @@ func NewClient() *Client {
 	if clusterMode {
 		namespace_ = ""
 	} else if namespace_ == "" {
-		if namespace__, ok := kubernetesutil.GetConfiguredNamespace(kubeconfigPath, context); ok {
+		if namespace__, ok := kubernetesutil.GetConfiguredNamespace(kubeconfigPath, kubeconfigContext); ok {
 			namespace_ = namespace__
 		}
 		if namespace_ == "" {
@@ -48,7 +49,7 @@ func NewClient() *Client {
 		Config:     config,
 		Kubernetes: kubernetes,
 		REST:       kubernetes.CoreV1().RESTClient(),
-		Context:    contextpkg.TODO(),
+		Context:    context,
 		Namespace:  namespace_,
 	}
 }
@@ -76,6 +77,6 @@ func (self *Client) AdminClient() *adminclient.Client {
 		controller.OperatorImageReference,
 		controller.SurrogateImageReference,
 		controller.SimpleImageReference,
-		"reposure.client",
+		fmt.Sprintf("%s.client", toolName),
 	)
 }

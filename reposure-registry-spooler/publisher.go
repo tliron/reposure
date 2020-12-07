@@ -1,6 +1,7 @@
 package main
 
 import (
+	contextpkg "context"
 	"fmt"
 	"net/http"
 	"os"
@@ -19,10 +20,10 @@ type Publisher struct {
 	log      *logging.Logger
 }
 
-func NewPublisher(registry string, roundTripper http.RoundTripper, username string, password string, token string, queue int) *Publisher {
+func NewPublisher(context contextpkg.Context, registry string, roundTripper http.RoundTripper, username string, password string, token string, queue int) *Publisher {
 	return &Publisher{
 		registry: registry,
-		client:   directclient.NewClient(roundTripper, username, password, token),
+		client:   directclient.NewClient(context, roundTripper, username, password, token),
 		work:     make(chan string, queue),
 		log:      logging.MustGetLogger("publisher"),
 	}

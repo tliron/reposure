@@ -46,9 +46,7 @@ type Controller struct {
 	Log     *logging.Logger
 }
 
-func NewController(toolName string, clusterMode bool, clusterRole string, namespace string, dynamic dynamicpkg.Interface, kubernetes kubernetes.Interface, apiExtensions apiextensionspkg.Interface, reposure reposureclientset.Interface, config *restpkg.Config, informerResyncPeriod time.Duration, stopChannel <-chan struct{}) *Controller {
-	context := contextpkg.TODO()
-
+func NewController(context contextpkg.Context, toolName string, clusterMode bool, clusterRole string, namespace string, dynamic dynamicpkg.Interface, kubernetes kubernetes.Interface, apiExtensions apiextensionspkg.Interface, reposure reposureclientset.Interface, config *restpkg.Config, informerResyncPeriod time.Duration, stopChannel <-chan struct{}) *Controller {
 	if clusterMode {
 		namespace = ""
 		if clusterRole != "" {

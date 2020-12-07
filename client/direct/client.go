@@ -18,7 +18,7 @@ type Client struct {
 	Context contextpkg.Context
 }
 
-func NewClient(transport http.RoundTripper, username string, password string, token string) *Client {
+func NewClient(context contextpkg.Context, transport http.RoundTripper, username string, password string, token string) *Client {
 	var options []remote.Option
 
 	if transport != nil {
@@ -37,6 +37,6 @@ func NewClient(transport http.RoundTripper, username string, password string, to
 	return &Client{
 		Secure:  transport != nil,
 		Options: options,
-		Context: contextpkg.TODO(),
+		Context: context,
 	}
 }

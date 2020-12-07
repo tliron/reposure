@@ -21,7 +21,7 @@ var listCommand = &cobra.Command{
 }
 
 func List(registry string) {
-	images, err := directclient.NewClient(roundTripper, username, password, token).ListImages(registry)
+	images, err := directclient.NewClient(context, roundTripper, username, password, token).ListImages(registry)
 	util.FailOnError(err)
 	for _, image := range images {
 		fmt.Println(image)

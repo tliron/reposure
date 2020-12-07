@@ -33,7 +33,7 @@ func RunSpooler(registryUrl string, path string) {
 		log.Infof("token: %s", token)
 	}
 
-	processor := NewPublisher(registryUrl, roundTripper, username, password, token, queue)
+	processor := NewPublisher(context, registryUrl, roundTripper, username, password, token, queue)
 	log.Info("starting processor")
 	go processor.Run()
 	defer processor.Close()

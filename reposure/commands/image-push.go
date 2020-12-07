@@ -24,6 +24,6 @@ func PushImage(registryName string, imageName string, imagePath string) {
 	util.FailOnError(err)
 	spoolerClient := adminClient.SpoolerClient(registry)
 
-	err = spoolerClient.PushImageFromFile(imageName, imagePath)
+	err = spoolerClient.PushTarballFromFile(imageName, imagePath)
 	util.FailOnError(err)
 }

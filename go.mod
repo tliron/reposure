@@ -14,8 +14,8 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/spf13/cobra v1.1.1
 	github.com/tebeka/atexit v0.3.0
-	github.com/tliron/kutil v0.1.7
-	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
+	github.com/tliron/kutil v0.1.8
+	golang.org/x/crypto v0.0.0-20201203163018-be400aefbc4c
 	k8s.io/api v0.19.4
 	k8s.io/apiextensions-apiserver v0.19.4
 	k8s.io/apimachinery v0.19.4

@@ -12,7 +12,7 @@ import (
 )
 
 func Shell(appNameSuffix string, containerName string) {
-	// We need stdout to be in raw"" mode
+	// We need stdout to be in "raw" mode
 	fd := int(os.Stdout.Fd())
 	state, err := terminal.MakeRaw(fd)
 	util.FailOnError(err)
