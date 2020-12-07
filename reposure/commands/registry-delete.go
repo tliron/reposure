@@ -12,7 +12,7 @@ func init() {
 
 var registryDeleteCommand = &cobra.Command{
 	Use:   "delete [[REGISTRY NAME]]",
-	Short: "Delete a registry",
+	Short: "Delete registries",
 	Args:  cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 1 {

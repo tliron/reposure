@@ -27,10 +27,10 @@ func ListImages(registryName string) {
 	util.FailOnError(err)
 	commandClient, err := adminClient.CommandClient(registry)
 	util.FailOnError(err)
-	images, err := commandClient.ListImages()
+	imageNames, err := commandClient.ListImages()
 	util.FailOnError(err)
 
-	for _, image := range images {
-		fmt.Fprintln(terminal.Stdout, image)
+	for _, imageName := range imageNames {
+		fmt.Fprintln(terminal.Stdout, imageName)
 	}
 }
