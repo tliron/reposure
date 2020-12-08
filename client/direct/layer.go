@@ -11,7 +11,8 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/stream"
 )
 
-func (self *Client) PushLayer(readCloser io.ReadCloser, name string) error {
+func (self *Client) PushLayer(readCloser io.ReadCloser, imageName string) error {
+	name := self.getName(imageName)
 	if tag, err := namepkg.NewTag(name); err == nil {
 		// See: https://github.com/google/go-containerregistry/issues/707
 		layer := stream.NewLayer(ioutil.NopCloser(readCloser))

@@ -1,11 +1,8 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/tliron/kutil/util"
-	directclient "github.com/tliron/reposure/client/direct"
 )
 
 var output string
@@ -20,13 +17,11 @@ var pullCommand = &cobra.Command{
 	Short: "Pull tarball from a container image registry",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		name := args[0]
-		Pull(registry, name, output)
+		Pull(args[0])
 	},
 }
 
-func Pull(registry string, name string, path string) {
-	name = fmt.Sprintf("%s/%s", registry, name)
-	err := directclient.NewClient(context, roundTripper, username, password, token).PullTarball(name, path)
+func Pull(imageName string) {
+	err := NewClient().PullTarball(imageName, output)
 	util.FailOnError(err)
 }

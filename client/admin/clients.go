@@ -5,6 +5,7 @@ import (
 
 	"github.com/op/go-logging"
 	commandclient "github.com/tliron/reposure/client/command"
+	directclient "github.com/tliron/reposure/client/direct"
 	registryclient "github.com/tliron/reposure/client/registry"
 	spoolerclient "github.com/tliron/reposure/client/spooler"
 	resources "github.com/tliron/reposure/resources/reposure.puccini.cloud/v1alpha1"
@@ -19,6 +20,10 @@ func (self *Client) RegistryClient() *registryclient.Client {
 		self.Namespace,
 		tlsMountPath,
 	)
+}
+
+func (self *Client) DirectClient(registry *resources.Registry) (*directclient.Client, error) {
+	return self.RegistryClient().DirectClient(registry)
 }
 
 func (self *Client) SpoolerClient(registry *resources.Registry) *spoolerclient.Client {
@@ -42,7 +47,7 @@ func (self *Client) CommandClient(registry *resources.Registry) (*commandclient.
 	registryClient := self.RegistryClient()
 
 	if _, username, password, token, err := registryClient.GetAuthorization(registry); err == nil {
-		if address, err := registryClient.GetHost(registry); err == nil {
+		if host, err := registryClient.GetHost(registry); err == nil {
 			return commandclient.NewClient(
 				self.Kubernetes,
 				self.REST,
@@ -52,7 +57,7 @@ func (self *Client) CommandClient(registry *resources.Registry) (*commandclient.
 				self.Namespace,
 				appName,
 				surrogateContainerName,
-				address,
+				host,
 				registryClient.GetCertificatePath(registry),
 				username,
 				password,

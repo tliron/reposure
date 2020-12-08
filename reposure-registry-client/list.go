@@ -5,7 +5,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tliron/kutil/util"
-	directclient "github.com/tliron/reposure/client/direct"
 )
 
 func init() {
@@ -16,12 +15,12 @@ var listCommand = &cobra.Command{
 	Use:   "list",
 	Short: "List images in a container image registry",
 	Run: func(cmd *cobra.Command, args []string) {
-		List(registry)
+		List()
 	},
 }
 
-func List(registry string) {
-	images, err := directclient.NewClient(context, roundTripper, username, password, token).ListImages(registry)
+func List() {
+	images, err := NewClient().ListImages()
 	util.FailOnError(err)
 	for _, image := range images {
 		fmt.Println(image)

@@ -5,8 +5,8 @@ import (
 
 	"github.com/op/go-logging"
 	reposurepkg "github.com/tliron/reposure/apis/clientset/versioned"
+	directclient "github.com/tliron/reposure/client/direct"
 	resources "github.com/tliron/reposure/resources/reposure.puccini.cloud/v1alpha1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubernetespkg "k8s.io/client-go/kubernetes"
 )
 
@@ -35,19 +35,20 @@ func NewClient(kubernetes kubernetespkg.Interface, reposure reposurepkg.Interfac
 	}
 }
 
-func (self *Client) Get(namespace string, registryName string) (*resources.Registry, error) {
-	// Default to same namespace as operator
-	if namespace == "" {
-		namespace = self.Namespace
-	}
-
-	if registry, err := self.Reposure.ReposureV1alpha1().Registries(namespace).Get(self.Context, registryName, meta.GetOptions{}); err == nil {
-		// When retrieved from cache the GVK may be empty
-		if registry.Kind == "" {
-			registry = registry.DeepCopy()
-			registry.APIVersion, registry.Kind = resources.RegistryGVK.ToAPIVersionAndKind()
+func (self *Client) DirectClient(registry *resources.Registry) (*directclient.Client, error) {
+	if host, transport, err := self.GetHTTPRoundTripper(registry); err == nil {
+		if _, username, password, token, err := self.GetAuthorization(registry); err == nil {
+			return directclient.NewClient(
+				host,
+				transport,
+				username,
+				password,
+				token,
+				self.Context,
+			), nil
+		} else {
+			return nil, err
 		}
-		return registry, nil
 	} else {
 		return nil, err
 	}

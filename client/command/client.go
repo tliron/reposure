@@ -22,17 +22,17 @@ type Client struct {
 	Namespace            string
 	SurrogateAppName     string
 	SpoolerContainerName string
-	Registry             string
+	RegistryHost         string
 	RegistryCertificate  string
 	RegistryUsername     string
 	RegistryPassword     string
 	RegistryToken        string
 }
 
-func NewClient(kubernetes kubernetes.Interface, rest rest.Interface, config *rest.Config, context contextpkg.Context, stderr io.Writer, namespace string, surrogateAppName string, spoolerContainerName string, registry string, certificate string, username string, password string, token string) *Client {
-	if registry == "" {
+func NewClient(kubernetes kubernetes.Interface, rest rest.Interface, config *rest.Config, context contextpkg.Context, stderr io.Writer, namespace string, surrogateAppName string, spoolerContainerName string, host string, certificate string, username string, password string, token string) *Client {
+	if host == "" {
 		// Default for sidecars
-		registry = "localhost:5000"
+		host = "localhost:5000"
 	}
 
 	return &Client{
@@ -44,7 +44,7 @@ func NewClient(kubernetes kubernetes.Interface, rest rest.Interface, config *res
 		Namespace:            namespace,
 		SurrogateAppName:     surrogateAppName,
 		SpoolerContainerName: spoolerContainerName,
-		Registry:             registry,
+		RegistryHost:         host,
 		RegistryCertificate:  certificate,
 		RegistryUsername:     username,
 		RegistryPassword:     password,

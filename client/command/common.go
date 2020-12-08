@@ -10,7 +10,7 @@ func (self *Client) Command(writer io.Writer, arguments ...string) error {
 	if podName, err := self.getFirstPodName(); err == nil {
 		arguments = append([]string{"reposure-registry-client"}, arguments...)
 
-		arguments = append(arguments, "--registry", self.Registry)
+		arguments = append(arguments, "--host", self.RegistryHost)
 
 		if self.RegistryCertificate != "" {
 			arguments = append(arguments, "--certificate", self.RegistryCertificate)

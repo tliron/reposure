@@ -13,12 +13,13 @@ import (
 //
 
 type Client struct {
+	Host    string
 	Secure  bool
 	Options []remote.Option
 	Context contextpkg.Context
 }
 
-func NewClient(context contextpkg.Context, transport http.RoundTripper, username string, password string, token string) *Client {
+func NewClient(host string, transport http.RoundTripper, username string, password string, token string, context contextpkg.Context) *Client {
 	var options []remote.Option
 
 	if transport != nil {
@@ -35,6 +36,7 @@ func NewClient(context contextpkg.Context, transport http.RoundTripper, username
 	}
 
 	return &Client{
+		Host:    host,
 		Secure:  transport != nil,
 		Options: options,
 		Context: context,

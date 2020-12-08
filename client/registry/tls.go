@@ -47,21 +47,21 @@ func (self *Client) GetTLSCertPool(registry *resources.Registry) (*x509.CertPool
 }
 
 func (self *Client) GetHTTPRoundTripper(registry *resources.Registry) (string, http.RoundTripper, error) {
-	if certPool, err := self.GetTLSCertPool(registry); err == nil {
-		if certPool != nil {
-			if host, err := self.GetHost(registry); err == nil {
+	if host, err := self.GetHost(registry); err == nil {
+		if certPool, err := self.GetTLSCertPool(registry); err == nil {
+			if certPool != nil {
 				roundTripper := util.NewForceHTTPSRoundTripper(&http.Transport{
 					TLSClientConfig: &tls.Config{
 						RootCAs: certPool,
 					},
 				})
 				return host, roundTripper, nil
-			} else {
-				return "", nil, err
 			}
 		} else {
-			return "", nil, nil
+			return "", nil, err
 		}
+
+		return host, nil, nil
 	} else {
 		return "", nil, err
 	}

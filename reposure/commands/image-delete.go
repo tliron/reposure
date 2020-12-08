@@ -48,7 +48,7 @@ func DeleteAllImages(registryName string) {
 	if len(imageNames) > 0 {
 		for _, imageName := range imageNames {
 			log.Infof("deleting image: %s", imageName)
-			err = spoolerClient.DeleteImage(imageName)
+			err := spoolerClient.DeleteImage(imageName)
 			util.FailOnError(err)
 		}
 	} else {
