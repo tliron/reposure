@@ -14,10 +14,10 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/spf13/cobra v1.1.1
 	github.com/tebeka/atexit v0.3.0
-	github.com/tliron/kutil v0.1.8
-	golang.org/x/crypto v0.0.0-20201203163018-be400aefbc4c
-	k8s.io/api v0.19.4
-	k8s.io/apiextensions-apiserver v0.19.4
-	k8s.io/apimachinery v0.19.4
-	k8s.io/client-go v0.19.4
+	github.com/tliron/kutil v0.1.9
+	golang.org/x/crypto v0.0.0-20201208171446-5f87f3452ae9
+	k8s.io/api v0.20.0
+	k8s.io/apiextensions-apiserver v0.20.0
+	k8s.io/apimachinery v0.20.0
+	k8s.io/client-go v0.20.0
 )

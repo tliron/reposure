@@ -78,7 +78,7 @@ can work in insecure mode, which might be fine for development, but otherwise yo
 to set up TLS authentication and authorization.
 
 Another challenge is that references within the image contain the registry in which they are stored,
-e.g. `10.97.119.139:5000/mylibrary/myimage:latest`. This means that the proxy would have to unpack the image,
+e.g. `10.97.119.139:5000/myrepo/myimage:latest`. This means that the proxy would have to unpack the image,
 rewrite the manifest, and repack it, and this would have to happen for both pushing and pulling.
 
 The trick, then, is to use Kubernetes's existing control plane, which allows for executing commands
@@ -111,15 +111,15 @@ using `buildah` to build locally:
     # Build
     CONTAINER_ID=$(buildah from scratch)
     ...
-    buildah commit $CONTAINER_ID localhost/mylibrary/myimage
+    buildah commit $CONTAINER_ID localhost/myrepo/myimage
     
     # Re-tag
     HOST=$(reposure registry info myrepo host)
-    podman tag localhost/mylibrary/myimage $HOST/mylibrary/myimage
+    podman tag localhost/myrepo/myimage $HOST/myrepo/myimage
 
     # Export and push
-    podman save $HOST/mylibrary/myimage --output myimage.tar
-    reposure image push myrepo mylibrary/myimage myimage.tar
+    podman save $HOST/myrepo/myimage --output myimage.tar
+    reposure image push myregistry myrepo/myimage myimage.tar
 
 (Note that spooler supports `.tar` as well as `.tar.gz` or `.tgz`.)
 
@@ -133,11 +133,11 @@ The limitation of Reposure also comes with an advantage.
 A side effect of the fact that the surrogate works directly with files is that it makes it very
 easy to store arbitrary files on the registry. If you try to push a file that is not a tarball,
 the spooler will create one for you (an image with a single layer). Likewise, when you pull a
-tarball, the `reposure` tool can unpack it for you. For example:
+tarball, the `reposure` tool can unpack that single layer for you. For example:
 
     echo 'hello world' > hello.txt
-    reposure image push myrepo catalog/hello hello.txt
-    reposure image pull myrepo catalog/hello --unpack
+    reposure image push myregistry myrepo/hello hello.txt
+    reposure image pull myregistry myrepo/hello --unpack
 
 
 Terminology
@@ -145,27 +145,46 @@ Terminology
 
 * *Registry*: This is the backend implementation, the actual server.
 * *Repository*: The image reference structure comprises a repository name and an image name (as well
-  as a "tag", that is usually used as the version). This extra level allows for namespace separation
-  as well as permission management per repository. So, it is correct to say that the image is stored
-  in a "repository" and it is also correct to say that it is stored in a "registry". Note that if
-  you do not specify a repository name in the reference it internally defaults to "library" (and if
-  you don't specify a tag it will default to "latest").
-* *Simple*: Reposure can deploy a "simple" registry server for you, based on the default Docker
-  registry. This is intended for development and testing purposes, but may be good enough for some
+  as a "tag", whhich is usually used as the version). This extra naming level allows for namespace
+  separation as well as permission management per repository. So, it is correct to say that the
+  image is stored in a "repository" and it is also correct to say that it is stored in a "registry".
+  Note that if you do not specify a repository name in the reference it internally defaults to
+  "library" (and if you don't specify a tag it will default to "latest").
+* *Simple*: Reposure can deploy a "simple" registry instance for you, based on the default Docker
+  registry. This is intended for development and testing purposes but may be good enough for some
   production uses. Of course there exist more robust implementations, such as Quay and Harbor.
 
 
 Basic Usage
 -----------
 
-`minikube ...`
+Use Minikube's registry add-on (with "view" cluster role):
 
-`reposure operator install`
+    kubectl config set-context --current --namespace=mynamespace
+    reposure operator install --role=view --wait
+    reposure registry create default --provider=minikube --wait
 
-`reposure registry create default --provider=minikube`
+Use built-in registry in OpenShift or CodeReady Containers (with "view" cluster role):
 
+    kubectl config set-context --current --namespace=mynamespace
+    reposure operator install --role=view --wait
+    reposure registry create default --provider=openshift --wait
 
+Install the simple registry (for low-security clusters only, e.g. Minikube):
 
+    kubectl config set-context --current --namespace=mynamespace
+    reposure operator install --wait
+    reposure simple install --wait
+    reposure registry create default --provider=simple --wait
+
+Quick test:
+
+    echo 'Hello, world!' > hello.txt
+    reposure image push default test hello.txt
+    reposure image pull default test --unpack
+
+For a fuller example that includes installing pushing and using an actual container image and also
+installing the simple registry with authentication and authorization see [`lab/test`](lab/test).
 
 
 FAQ
@@ -179,7 +198,7 @@ forwarding, which is built into the Kubernetes control plane.
 
 ### Why is it called "Reposure"?
 
-"Reposure" is the state of being calm or relaxed, which is the ideal way to deal with the
+"Reposure" is the state of being calm or relaxed, which is the ideal attitude for dealing with the
 complexities of cloud-native registries.
 
 Also, it's kinda short for "repository surrogate".
