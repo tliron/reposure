@@ -13,7 +13,7 @@ import (
 	directclient "github.com/tliron/reposure/client/direct"
 )
 
-var log = logging.MustGetLogger("registry-spooler")
+var log = logging.MustGetLogger("reposure-registry-spooler")
 
 func RunSpooler(registryUrl string, path string) {
 	stopChannel := util.SetupSignalHandler()
@@ -26,29 +26,29 @@ func RunSpooler(registryUrl string, path string) {
 		util.FailOnError(err)
 	}
 
-	if username != "" {
+	/*if username != "" {
 		log.Infof("username: %s", username)
 		log.Infof("password: %s", password)
 	} else if token != "" {
 		log.Infof("token: %s", token)
-	}
+	}*/
 
-	processor := NewPublisher(context, registryUrl, roundTripper, username, password, token, queue)
-	log.Info("starting processor")
-	go processor.Run()
-	defer processor.Close()
+	publisher := NewPublisher(context, registryUrl, roundTripper, username, password, token, queue)
+	log.Info("starting publisher")
+	go publisher.Run()
+	defer publisher.Close()
 
 	fileInfos, err := ioutil.ReadDir(path)
 	util.FailOnError(err)
 	for _, fileInfo := range fileInfos {
-		processor.Enqueue(filepath.Join(path, fileInfo.Name()))
+		publisher.Enqueue(filepath.Join(path, fileInfo.Name()))
 	}
 
 	watcher, err := NewWatcher()
 	util.FailOnError(err)
 
 	err = watcher.Add(path, fsnotify.Create, func(path string) {
-		processor.Enqueue(path)
+		publisher.Enqueue(path)
 	})
 	util.FailOnError(err)
 

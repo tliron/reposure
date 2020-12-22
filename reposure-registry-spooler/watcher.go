@@ -8,9 +8,9 @@ import (
 )
 
 type Watcher struct {
-	watcher  *fsnotify.Watcher
-	handlers []*Handler
-	log      *logging.Logger
+	Watcher  *fsnotify.Watcher
+	Handlers []*Handler
+	Log      *logging.Logger
 }
 
 type HandlerFunc func(path string)
@@ -23,8 +23,8 @@ type Handler struct {
 func NewWatcher() (*Watcher, error) {
 	if watcher, err := fsnotify.NewWatcher(); err == nil {
 		return &Watcher{
-			watcher: watcher,
-			log:     logging.MustGetLogger("watcher"),
+			Watcher: watcher,
+			Log:     logging.MustGetLogger("watcher"),
 		}, nil
 	} else {
 		return nil, err
@@ -32,15 +32,15 @@ func NewWatcher() (*Watcher, error) {
 }
 
 func (self *Watcher) Add(directoryPath string, op fsnotify.Op, handle HandlerFunc) error {
-	self.handlers = append(self.handlers, &Handler{
+	self.Handlers = append(self.Handlers, &Handler{
 		op:     op,
 		handle: handle,
 	})
-	return self.watcher.Add(directoryPath)
+	return self.Watcher.Add(directoryPath)
 }
 
 func (self *Watcher) Close() error {
-	return self.watcher.Close()
+	return self.Watcher.Close()
 }
 
 func (self *Watcher) Run() {
@@ -51,9 +51,9 @@ func (self *Watcher) Run() {
 
 func (self *Watcher) Process() bool {
 	select {
-	case event, ok := <-self.watcher.Events:
+	case event, ok := <-self.Watcher.Events:
 		if !ok {
-			self.log.Warning("no more events")
+			self.Log.Warning("no more events")
 			return false
 		}
 
@@ -62,21 +62,21 @@ func (self *Watcher) Process() bool {
 			break
 		}
 
-		self.log.Debugf("event: %s", event)
+		self.Log.Debugf("event: %s", event)
 
-		for _, handler := range self.handlers {
+		for _, handler := range self.Handlers {
 			if event.Op&handler.op == handler.op {
 				handler.handle(event.Name)
 			}
 		}
 
-	case err, ok := <-self.watcher.Errors:
+	case err, ok := <-self.Watcher.Errors:
 		if !ok {
-			self.log.Warning("no more errors")
+			self.Log.Warning("no more errors")
 			return false
 		}
 
-		self.log.Errorf("error: %s", err.Error())
+		self.Log.Errorf("error: %s", err.Error())
 	}
 
 	return true

@@ -18,15 +18,15 @@ import (
 
 const tlsMountPath = "/tls"
 
-func (self *Client) GetSourceRegistryHost(host string) (string, error) {
-	if host == "internal" {
-		if registry, err := kubernetes.GetInternalRegistryHost(self.Context, self.Kubernetes); err == nil {
-			return registry, nil
+func (self *Client) GetSourceRegistryHost(registryHost string) (string, error) {
+	if registryHost == "internal" {
+		if registryHost, err := kubernetes.GetInternalRegistryHost(self.Context, self.Kubernetes); err == nil {
+			return registryHost, nil
 		} else {
 			return "", fmt.Errorf("could not discover internal registry: %s", err.Error())
 		}
-	} else if host != "" {
-		return host, nil
+	} else if registryHost != "" {
+		return registryHost, nil
 	} else {
 		return "", errors.New("must provide \"--registry\"")
 	}
