@@ -53,6 +53,15 @@ func (self *Client) CreateRegistrySurrogate(registry *resources.Registry) (*core
 							Name:  "REPOSURE_REGISTRY_SPOOLER_verbose",
 							Value: "2",
 						},
+						{
+							// For kutil's kubernetes.GetConfiguredNamespace
+							Name: "KUBERNETES_NAMESPACE",
+							ValueFrom: &core.EnvVarSource{
+								FieldRef: &core.ObjectFieldSelector{
+									FieldPath: "metadata.namespace",
+								},
+							},
+						},
 					},
 					LivenessProbe: &core.Probe{
 						Handler: core.Handler{

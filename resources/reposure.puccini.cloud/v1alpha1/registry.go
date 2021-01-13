@@ -209,22 +209,22 @@ var RegistryCustomResourceDefinition = apiextensions.CustomResourceDefinition{
 
 func RegistryToARD(registry *Registry) ard.StringMap {
 	map_ := make(ard.StringMap)
-	map_["Name"] = registry.Name
-	map_["Type"] = registry.Spec.Type
+	map_["name"] = registry.Name
+	map_["type"] = registry.Spec.Type
 	if registry.Spec.Direct != nil {
-		map_["Direct"] = ard.StringMap{
-			"Host": registry.Spec.Direct.Host,
+		map_["direct"] = ard.StringMap{
+			"host": registry.Spec.Direct.Host,
 		}
 	} else if registry.Spec.Indirect != nil {
-		map_["Indirect"] = ard.StringMap{
-			"Namespace": registry.Spec.Indirect.Namespace,
-			"Service":   registry.Spec.Indirect.Service,
-			"Port":      registry.Spec.Indirect.Port,
+		map_["indirect"] = ard.StringMap{
+			"namespace": registry.Spec.Indirect.Namespace,
+			"service":   registry.Spec.Indirect.Service,
+			"port":      registry.Spec.Indirect.Port,
 		}
 	}
-	map_["AuthenticationSecret"] = registry.Spec.AuthenticationSecret
-	map_["AuthenticationSecretDataKey"] = registry.Spec.AuthenticationSecretDataKey
-	map_["AuthSecret"] = registry.Spec.AuthorizationSecret
-	map_["SurrogatePod"] = registry.Status.SurrogatePod
+	map_["authenticationSecret"] = registry.Spec.AuthenticationSecret
+	map_["authenticationSecretDataKey"] = registry.Spec.AuthenticationSecretDataKey
+	map_["authSecret"] = registry.Spec.AuthorizationSecret
+	map_["surrogatePod"] = registry.Status.SurrogatePod
 	return map_
 }

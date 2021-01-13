@@ -124,5 +124,5 @@ func CreateRegistry(registryName string) {
 }
 
 func failRegistryCreate() {
-	util.Fail("must specify only one of \"--address\", \"--service\", or \"--provider\"")
+	util.Fail("must specify only one of \"--host\", \"--service\", or \"--provider\"")
 }

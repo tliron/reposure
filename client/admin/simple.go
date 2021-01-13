@@ -190,6 +190,15 @@ func (self *Client) createSimpleDeployment(registryAddress string, serviceAccoun
 									Name:  "REGISTRY_STORAGE_DELETE_ENABLED",
 									Value: "true",
 								},
+								{
+									// For kutil's kubernetes.GetConfiguredNamespace
+									Name: "KUBERNETES_NAMESPACE",
+									ValueFrom: &core.EnvVarSource{
+										FieldRef: &core.ObjectFieldSelector{
+											FieldPath: "metadata.namespace",
+										},
+									},
+								},
 							},
 							// Note: Probes skip certificate validation for HTTPS
 							LivenessProbe: &core.Probe{

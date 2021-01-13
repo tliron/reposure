@@ -213,7 +213,7 @@ func (self *Client) createOperatorClusterRoleBinding(serviceAccount *core.Servic
 	})
 }
 
-func (self *Client) createOperatorDeployment(registryAddress string, serviceAccount *core.ServiceAccount, replicas int32) (*apps.Deployment, error) {
+func (self *Client) createOperatorDeployment(sourceRegistryHost string, serviceAccount *core.ServiceAccount, replicas int32) (*apps.Deployment, error) {
 	appName := fmt.Sprintf("%s-operator", self.NamePrefix)
 	labels := self.Labels(appName, "operator", self.Namespace)
 
@@ -236,7 +236,7 @@ func (self *Client) createOperatorDeployment(registryAddress string, serviceAcco
 					Containers: []core.Container{
 						{
 							Name:            "operator",
-							Image:           fmt.Sprintf("%s/%s", registryAddress, self.OperatorImageReference),
+							Image:           fmt.Sprintf("%s/%s", sourceRegistryHost, self.OperatorImageReference),
 							ImagePullPolicy: core.PullAlways,
 							Env: []core.EnvVar{
 								{
@@ -246,6 +246,15 @@ func (self *Client) createOperatorDeployment(registryAddress string, serviceAcco
 								{
 									Name:  "REPOSURE_OPERATOR_verbose",
 									Value: "1",
+								},
+								{
+									// For kutil's kubernetes.GetConfiguredNamespace
+									Name: "KUBERNETES_NAMESPACE",
+									ValueFrom: &core.EnvVarSource{
+										FieldRef: &core.ObjectFieldSelector{
+											FieldPath: "metadata.namespace",
+										},
+									},
 								},
 							},
 							LivenessProbe: &core.Probe{

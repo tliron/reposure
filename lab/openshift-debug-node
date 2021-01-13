@@ -1,9 +1,0 @@
-#!/bin/bash
-set -e
-
-HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
-. "$HERE/../scripts/_env"
-. "$HERE/_env"
-
-NODE=$(oc get node --output name)
-oc debug "$NODE"

@@ -19,7 +19,7 @@ Get It
 Rationale
 ---------
 
-### What are cloud-native registires?
+### What are cloud-native registries?
 
 Kubernetes's container runtime, whether it's CRI-O or Docker or something else, can pull container
 images from any OCI-compliant container image registry. While various public registries exist, such

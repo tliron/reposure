@@ -34,6 +34,7 @@ func DescribeRegistry(registryName string) {
 		formatpkg.Print(resources.RegistryToARD(registry), format, terminal.Stdout, strict, pretty)
 	} else {
 		fmt.Fprintf(terminal.Stdout, "%s: %s\n", terminal.ColorTypeName("Name"), terminal.ColorValue(registry.Name))
+		fmt.Fprintf(terminal.Stdout, "%s: %s\n", terminal.ColorTypeName("Type"), terminal.ColorValue(string(registry.Spec.Type)))
 
 		if registry.Spec.Direct != nil {
 			fmt.Fprintf(terminal.Stdout, "  %s:\n", terminal.ColorTypeName("Direct"))
