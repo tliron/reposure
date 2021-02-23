@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/spf13/cobra"
 	cobrautil "github.com/tliron/kutil/cobra"
+	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/terminal"
 	"github.com/tliron/kutil/util"
 )
@@ -43,9 +44,9 @@ var command = &cobra.Command{
 		util.FailOnError(err)
 
 		if logTo == "" {
-			util.ConfigureLogging(verbose, nil)
+			logging.Configure(verbose, nil)
 		} else {
-			util.ConfigureLogging(verbose, &logTo)
+			logging.Configure(verbose, &logTo)
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {

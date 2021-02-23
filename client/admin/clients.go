@@ -1,9 +1,7 @@
 package admin
 
 import (
-	"fmt"
-
-	"github.com/op/go-logging"
+	"github.com/tliron/kutil/logging"
 	commandclient "github.com/tliron/reposure/client/command"
 	directclient "github.com/tliron/reposure/client/direct"
 	registryclient "github.com/tliron/reposure/client/registry"
@@ -16,7 +14,7 @@ func (self *Client) RegistryClient() *registryclient.Client {
 		self.Kubernetes,
 		self.Reposure,
 		self.Context,
-		logging.MustGetLogger(fmt.Sprintf("%s.registry", self.LogName)),
+		logging.GetLoggerf("%s.registry", self.LogName),
 		self.Namespace,
 		tlsMountPath,
 	)

@@ -3,7 +3,7 @@ package registry
 import (
 	contextpkg "context"
 
-	"github.com/op/go-logging"
+	"github.com/tliron/kutil/logging"
 	reposurepkg "github.com/tliron/reposure/apis/clientset/versioned"
 	directclient "github.com/tliron/reposure/client/direct"
 	resources "github.com/tliron/reposure/resources/reposure.puccini.cloud/v1alpha1"
@@ -18,13 +18,13 @@ type Client struct {
 	Kubernetes kubernetespkg.Interface
 	Reposure   reposurepkg.Interface
 	Context    contextpkg.Context
-	Log        *logging.Logger
+	Log        logging.Logger
 
 	Namespace    string
 	TLSMountPath string
 }
 
-func NewClient(kubernetes kubernetespkg.Interface, reposure reposurepkg.Interface, context contextpkg.Context, log *logging.Logger, namespace string, tlsMountPath string) *Client {
+func NewClient(kubernetes kubernetespkg.Interface, reposure reposurepkg.Interface, context contextpkg.Context, log logging.Logger, namespace string, tlsMountPath string) *Client {
 	return &Client{
 		Kubernetes:   kubernetes,
 		Reposure:     reposure,

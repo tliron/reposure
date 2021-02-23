@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/spf13/cobra"
+	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/terminal"
 	"github.com/tliron/kutil/util"
 	directclient "github.com/tliron/reposure/client/direct"
@@ -39,9 +40,9 @@ var rootCommand = &cobra.Command{
 		util.FailOnError(err)
 
 		if logTo == "" {
-			util.ConfigureLogging(verbose, nil)
+			logging.Configure(verbose, nil)
 		} else {
-			util.ConfigureLogging(verbose, &logTo)
+			logging.Configure(verbose, &logTo)
 		}
 
 		if host == "" {

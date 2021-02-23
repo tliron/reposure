@@ -8,21 +8,21 @@ import (
 	"strings"
 
 	"github.com/gofrs/flock"
-	"github.com/op/go-logging"
+	"github.com/tliron/kutil/logging"
 	directclient "github.com/tliron/reposure/client/direct"
 )
 
 type Publisher struct {
 	Client *directclient.Client
 	Work   chan string
-	Log    *logging.Logger
+	Log    logging.Logger
 }
 
 func NewPublisher(context contextpkg.Context, host string, roundTripper http.RoundTripper, username string, password string, token string, queue int) *Publisher {
 	return &Publisher{
 		Client: directclient.NewClient(host, roundTripper, username, password, token, context),
 		Work:   make(chan string, queue),
-		Log:    logging.MustGetLogger("publisher"),
+		Log:    logging.GetLogger("publisher"),
 	}
 }
 

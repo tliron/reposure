@@ -8,12 +8,12 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/heptiolabs/healthcheck"
-	"github.com/op/go-logging"
+	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/util"
 	directclient "github.com/tliron/reposure/client/direct"
 )
 
-var log = logging.MustGetLogger("reposure-registry-spooler")
+var log = logging.GetLogger("reposure-registry-spooler")
 
 func RunSpooler(registryUrl string, path string) {
 	stopChannel := util.SetupSignalHandler()
