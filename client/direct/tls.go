@@ -3,8 +3,8 @@ package direct
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
 	"net/http"
+	"os"
 
 	"github.com/tliron/kutil/util"
 )
@@ -27,7 +27,7 @@ func TLSRoundTripper(certificatePath string) (http.RoundTripper, error) {
 }
 
 func CertPool(certificatePath string) (*x509.CertPool, error) {
-	if bytes, err := ioutil.ReadFile(certificatePath); err == nil {
+	if bytes, err := os.ReadFile(certificatePath); err == nil {
 		return util.ParseX509CertPool(bytes)
 	} else {
 		return nil, err

@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 
 	"github.com/fsnotify/fsnotify"
@@ -38,10 +38,10 @@ func RunSpooler(registryUrl string, path string) {
 	go publisher.Run()
 	defer publisher.Close()
 
-	fileInfos, err := ioutil.ReadDir(path)
+	dirEntries, err := os.ReadDir(path)
 	util.FailOnError(err)
-	for _, fileInfo := range fileInfos {
-		publisher.Enqueue(filepath.Join(path, fileInfo.Name()))
+	for _, dirEntry := range dirEntries {
+		publisher.Enqueue(filepath.Join(path, dirEntry.Name()))
 	}
 
 	watcher, err := NewWatcher()
