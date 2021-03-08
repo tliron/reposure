@@ -42,7 +42,6 @@ var command = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		err := terminal.ProcessColorizeFlag(colorize)
 		util.FailOnError(err)
-
 		if logTo == "" {
 			logging.Configure(verbose, nil)
 		} else {
