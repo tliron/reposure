@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -35,28 +34,28 @@ func RegistryInfo(registryName string, field string) {
 		host, err := registryClient.GetHost(registry)
 		util.FailOnError(err)
 		if host != "" {
-			fmt.Fprintln(terminal.Stdout, host)
+			terminal.Println(host)
 		}
 
 	case "username":
 		_, username, _, _, err := registryClient.GetAuthorization(registry)
 		util.FailOnError(err)
 		if username != "" {
-			fmt.Fprintln(terminal.Stdout, username)
+			terminal.Println(username)
 		}
 
 	case "password":
 		_, _, password, _, err := registryClient.GetAuthorization(registry)
 		util.FailOnError(err)
 		if password != "" {
-			fmt.Fprintln(terminal.Stdout, password)
+			terminal.Println(password)
 		}
 
 	case "token":
 		_, _, _, token, err := registryClient.GetAuthorization(registry)
 		util.FailOnError(err)
 		if token != "" {
-			fmt.Fprintln(terminal.Stdout, token)
+			terminal.Println(token)
 		}
 
 	case "cert":
@@ -64,7 +63,7 @@ func RegistryInfo(registryName string, field string) {
 		util.FailOnError(err)
 		cert_ := strings.Trim(util.BytesToString(cert), "\n")
 		if cert_ != "" {
-			fmt.Fprintln(terminal.Stdout, cert_)
+			terminal.Println(cert_)
 		}
 
 	default:

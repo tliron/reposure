@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+
+HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
+. "$HERE/../scripts/_env"
+
+CERT_MANAGER_VERSION=$(github_version jetstack/cert-manager)
+CERT_MANAGER_VERSION=${CERT_MANAGER_VERSION:1}
+m "CERT_MANAGER_VERSION=$CERT_MANAGER_VERSION"

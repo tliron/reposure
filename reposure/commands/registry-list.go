@@ -45,7 +45,7 @@ func ListRegistries() {
 
 	case "bare":
 		for _, registry := range registries.Items {
-			fmt.Fprintln(terminal.Stdout, registry.Name)
+			terminal.Println(registry.Name)
 		}
 
 	default:

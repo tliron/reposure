@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/tliron/kutil/terminal"
 	"github.com/tliron/kutil/util"
@@ -18,6 +16,6 @@ var simpleHostCommand = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		host, err := NewClient().AdminClient().SimpleHost()
 		util.FailOnError(err)
-		fmt.Fprintln(terminal.Stdout, host)
+		terminal.Println(host)
 	},
 }

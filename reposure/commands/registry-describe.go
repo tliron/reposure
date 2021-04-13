@@ -33,39 +33,39 @@ func DescribeRegistry(registryName string) {
 	if format != "" {
 		formatpkg.Print(resources.RegistryToARD(registry), format, terminal.Stdout, strict, pretty)
 	} else {
-		fmt.Fprintf(terminal.Stdout, "%s: %s\n", terminal.StyleTypeName("Name"), terminal.StyleValue(registry.Name))
-		fmt.Fprintf(terminal.Stdout, "%s: %s\n", terminal.StyleTypeName("Type"), terminal.StyleValue(string(registry.Spec.Type)))
+		terminal.Printf("%s: %s\n", terminal.Stylize.TypeName("Name"), terminal.Stylize.Value(registry.Name))
+		terminal.Printf("%s: %s\n", terminal.Stylize.TypeName("Type"), terminal.Stylize.Value(string(registry.Spec.Type)))
 
 		if registry.Spec.Direct != nil {
-			fmt.Fprintf(terminal.Stdout, "  %s:\n", terminal.StyleTypeName("Direct"))
+			terminal.Printf("  %s:\n", terminal.Stylize.TypeName("Direct"))
 			if registry.Spec.Direct.Host != "" {
-				fmt.Fprintf(terminal.Stdout, "    %s: %s\n", terminal.StyleTypeName("Host"), terminal.StyleValue(registry.Spec.Direct.Host))
+				terminal.Printf("    %s: %s\n", terminal.Stylize.TypeName("Host"), terminal.Stylize.Value(registry.Spec.Direct.Host))
 			}
 		}
 
 		if registry.Spec.Indirect != nil {
-			fmt.Fprintf(terminal.Stdout, "  %s:\n", terminal.StyleTypeName("Indirect"))
+			terminal.Printf("  %s:\n", terminal.Stylize.TypeName("Indirect"))
 			if registry.Spec.Indirect.Namespace != "" {
-				fmt.Fprintf(terminal.Stdout, "    %s: %s\n", terminal.StyleTypeName("Namespace"), terminal.StyleValue(registry.Spec.Indirect.Namespace))
+				terminal.Printf("    %s: %s\n", terminal.Stylize.TypeName("Namespace"), terminal.Stylize.Value(registry.Spec.Indirect.Namespace))
 			}
 			if registry.Spec.Indirect.Service != "" {
-				fmt.Fprintf(terminal.Stdout, "    %s: %s\n", terminal.StyleTypeName("Service"), terminal.StyleValue(registry.Spec.Indirect.Service))
+				terminal.Printf("    %s: %s\n", terminal.Stylize.TypeName("Service"), terminal.Stylize.Value(registry.Spec.Indirect.Service))
 			}
-			fmt.Fprintf(terminal.Stdout, "    %s: %s\n", terminal.StyleTypeName("Port"), terminal.StyleValue(fmt.Sprintf("%d", registry.Spec.Indirect.Port)))
+			terminal.Printf("    %s: %s\n", terminal.Stylize.TypeName("Port"), terminal.Stylize.Value(fmt.Sprintf("%d", registry.Spec.Indirect.Port)))
 		}
 
 		if registry.Spec.AuthenticationSecret != "" {
-			fmt.Fprintf(terminal.Stdout, "%s: %s\n", terminal.StyleTypeName("AuthenticationSecret"), terminal.StyleValue(registry.Spec.AuthenticationSecret))
+			terminal.Printf("%s: %s\n", terminal.Stylize.TypeName("AuthenticationSecret"), terminal.Stylize.Value(registry.Spec.AuthenticationSecret))
 		}
 		if registry.Spec.AuthenticationSecretDataKey != "" {
-			fmt.Fprintf(terminal.Stdout, "%s: %s\n", terminal.StyleTypeName("AuthenticationSecretDataKey"), terminal.StyleValue(registry.Spec.AuthenticationSecretDataKey))
+			terminal.Printf("%s: %s\n", terminal.Stylize.TypeName("AuthenticationSecretDataKey"), terminal.Stylize.Value(registry.Spec.AuthenticationSecretDataKey))
 		}
 		if registry.Spec.AuthorizationSecret != "" {
-			fmt.Fprintf(terminal.Stdout, "%s: %s\n", terminal.StyleTypeName("AuthorizationSecret"), terminal.StyleValue(registry.Spec.AuthorizationSecret))
+			terminal.Printf("%s: %s\n", terminal.Stylize.TypeName("AuthorizationSecret"), terminal.Stylize.Value(registry.Spec.AuthorizationSecret))
 		}
 
 		if registry.Status.SurrogatePod != "" {
-			fmt.Fprintf(terminal.Stdout, "%s: %s\n", terminal.StyleTypeName("SurrogatePod"), terminal.StyleValue(registry.Status.SurrogatePod))
+			terminal.Printf("%s: %s\n", terminal.Stylize.TypeName("SurrogatePod"), terminal.Stylize.Value(registry.Status.SurrogatePod))
 		}
 	}
 }

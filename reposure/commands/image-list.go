@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/tliron/kutil/terminal"
 	"github.com/tliron/kutil/util"
@@ -31,6 +29,6 @@ func ListImages(registryName string) {
 	util.FailOnError(err)
 
 	for _, imageName := range imageNames {
-		fmt.Fprintln(terminal.Stdout, imageName)
+		terminal.Println(imageName)
 	}
 }
