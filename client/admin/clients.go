@@ -2,10 +2,10 @@ package admin
 
 import (
 	"github.com/tliron/kutil/logging"
-	commandclient "github.com/tliron/reposure/client/command"
 	directclient "github.com/tliron/reposure/client/direct"
 	registryclient "github.com/tliron/reposure/client/registry"
-	spoolerclient "github.com/tliron/reposure/client/spooler"
+	commandclient "github.com/tliron/reposure/client/surrogate/command"
+	spoolerclient "github.com/tliron/reposure/client/surrogate/spooler"
 	resources "github.com/tliron/reposure/resources/reposure.puccini.cloud/v1alpha1"
 )
 
@@ -24,7 +24,7 @@ func (self *Client) DirectClient(registry *resources.Registry) (*directclient.Cl
 	return self.RegistryClient().DirectClient(registry)
 }
 
-func (self *Client) SpoolerClient(registry *resources.Registry) *spoolerclient.Client {
+func (self *Client) SurrogateSpoolerClient(registry *resources.Registry) *spoolerclient.Client {
 	appName := self.GetRegistrySurrogateAppName(registry.Name)
 
 	return spoolerclient.NewClient(
@@ -40,7 +40,7 @@ func (self *Client) SpoolerClient(registry *resources.Registry) *spoolerclient.C
 	)
 }
 
-func (self *Client) CommandClient(registry *resources.Registry) (*commandclient.Client, error) {
+func (self *Client) SurrogateCommandClient(registry *resources.Registry) (*commandclient.Client, error) {
 	appName := self.GetRegistrySurrogateAppName(registry.Name)
 	registryClient := self.RegistryClient()
 

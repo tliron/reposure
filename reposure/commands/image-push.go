@@ -22,8 +22,12 @@ func PushImage(registryName string, imageName string, imagePath string) {
 	adminClient := NewClient().AdminClient()
 	registry, err := adminClient.GetRegistry(namespace, registryName)
 	util.FailOnError(err)
-	spoolerClient := adminClient.SpoolerClient(registry)
+	surrogateSpoolerClient := adminClient.SurrogateSpoolerClient(registry)
 
-	err = spoolerClient.PushTarballFromFile(imageName, imagePath)
+	// TODO:
+	// 1) block until spooler picks up file
+	// 2) forward errors from spooler
+
+	err = surrogateSpoolerClient.PushTarballFromFile(imageName, imagePath)
 	util.FailOnError(err)
 }

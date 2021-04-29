@@ -1,9 +1,9 @@
 package main
 
 import (
-	directclient "github.com/tliron/reposure/client/direct"
+	"github.com/tliron/reposure/client/direct"
 )
 
-func NewClient() *directclient.Client {
-	return directclient.NewClient(host, roundTripper, username, password, token, context)
+func NewClient() *direct.Client {
+	return direct.NewClient(host, roundTripper, username, password, token, context)
 }

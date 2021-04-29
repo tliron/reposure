@@ -34,13 +34,13 @@ func DeleteRegistry(registryName string) {
 }
 
 func DeleteAllRegistries() {
-	reposure := NewClient().AdminClient()
-	registries, err := reposure.ListRegistries()
+	adminClient := NewClient().AdminClient()
+	registries, err := adminClient.ListRegistries()
 	util.FailOnError(err)
 	if len(registries.Items) > 0 {
 		for _, registry := range registries.Items {
 			log.Infof("deleting registry: %s/%s", registry.Namespace, registry.Name)
-			err := reposure.DeleteRegistry(registry.Namespace, registry.Name)
+			err := adminClient.DeleteRegistry(registry.Namespace, registry.Name)
 			util.FailOnError(err)
 		}
 	} else {

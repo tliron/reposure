@@ -29,9 +29,9 @@ func DeleteImage(registryName string, imageName string) {
 	adminClient := NewClient().AdminClient()
 	registry, err := adminClient.GetRegistry(namespace, registryName)
 	util.FailOnError(err)
-	spoolerClient := adminClient.SpoolerClient(registry)
+	surrogateSpoolerClient := adminClient.SurrogateSpoolerClient(registry)
 
-	err = spoolerClient.DeleteImage(imageName)
+	err = surrogateSpoolerClient.DeleteImage(imageName)
 	util.FailOnError(err)
 }
 
@@ -39,16 +39,16 @@ func DeleteAllImages(registryName string) {
 	adminClient := NewClient().AdminClient()
 	registry, err := adminClient.GetRegistry(namespace, registryName)
 	util.FailOnError(err)
-	commandClient, err := adminClient.CommandClient(registry)
+	surrogateCommandClient, err := adminClient.SurrogateCommandClient(registry)
 	util.FailOnError(err)
-	spoolerClient := adminClient.SpoolerClient(registry)
+	surrogateSpoolerClient := adminClient.SurrogateSpoolerClient(registry)
 
-	imageNames, err := commandClient.ListImages()
+	imageNames, err := surrogateCommandClient.ListImages()
 	util.FailOnError(err)
 	if len(imageNames) > 0 {
 		for _, imageName := range imageNames {
 			log.Infof("deleting image: %s", imageName)
-			err := spoolerClient.DeleteImage(imageName)
+			err := surrogateSpoolerClient.DeleteImage(imageName)
 			util.FailOnError(err)
 		}
 	} else {

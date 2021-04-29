@@ -23,9 +23,9 @@ func ListImages(registryName string) {
 	adminClient := NewClient().AdminClient()
 	registry, err := adminClient.GetRegistry(namespace, registryName)
 	util.FailOnError(err)
-	commandClient, err := adminClient.CommandClient(registry)
+	surrogateCommandClient, err := adminClient.SurrogateCommandClient(registry)
 	util.FailOnError(err)
-	imageNames, err := commandClient.ListImages()
+	imageNames, err := surrogateCommandClient.ListImages()
 	util.FailOnError(err)
 
 	for _, imageName := range imageNames {

@@ -27,13 +27,13 @@ func PullImage(registryName string, imageName string) {
 	adminClient := NewClient().AdminClient()
 	registry, err := adminClient.GetRegistry(namespace, registryName)
 	util.FailOnError(err)
-	commandClient, err := adminClient.CommandClient(registry)
+	surrogateCommandClient, err := adminClient.SurrogateCommandClient(registry)
 	util.FailOnError(err)
 
 	if unpack {
-		err = commandClient.PullLayer(imageName, os.Stdout)
+		err = surrogateCommandClient.PullLayer(imageName, os.Stdout)
 	} else {
-		err = commandClient.PullTarball(imageName, os.Stdout)
+		err = surrogateCommandClient.PullTarball(imageName, os.Stdout)
 	}
 	util.FailOnError(err)
 }

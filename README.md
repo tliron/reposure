@@ -9,6 +9,12 @@ Reposure
 
 Manage and access cloud-native container image registries for [Kubernetes](https://kubernetes.io/).
 
+Reposure has baked-in support for the built-in registries of OpenShift and Minikube. Additionally, it
+can deploy its own "simple" cloud-native registry, based on the reference Docker registry, which can
+be useful for testing and development. (Note that by default it uses self-signed certificates, which
+may be inaccessible to your container runtime.) For more robust implementations, see
+[Harbor](https://goharbor.io/) and [Quay](https://www.projectquay.io/).
+
 
 Get It
 ------
@@ -23,86 +29,92 @@ Rationale
 
 Kubernetes's container runtime, whether it's CRI-O or Docker or something else, pulls its container
 images from any OCI-compliant container image registry. Though there are publicly hosted registries,
-such as [Docker Hub](https://hub.docker.com/) and [Quay](https://quay.io/), it is often necessary to
-host a private registry.
+such as [Docker Hub](https://hub.docker.com/) and [Quay](https://quay.io/), it is often desirable and
+necessary to host a private registry.
 
-It makes sense to use Kubernetes to deploy your private registry. Moreover, though your private
-registry can run anywhere, it may also make sense to deploy it in *the same* Kubernetes cluster that
-will be using it, a configuration that we're here calling a "cloud-native registry". Doing so can
-significantly simplify the deployment of applications that require a private registry, as indeed the
-registry could be just part of the workload. An obvious use case is cloud-native CI/CD pipelines, for
-which building and packaging code, publishing images, and deploying containers all happen within the
-cluster. Indeed, OpenShift/OKD and Minikube come with built-in cloud-native registries exactly for
-this purpose.
+With that in mind, it can makes sense to use Kubernetes to host the private registry. Moreover, though
+the private registry can run on any Kubernetes cluster, it may also make sense to deploy it in *the same*
+Kubernetes cluster that will be using it. This setup is what we're here calling a "cloud-native registry".
+
+This setup can significantly simplify the deployment as there is no need to create or access an additional
+cluster. Moreover, it may be possible to have applications deploy their own custom, private registries.
+An obvious use case is cloud-native CI/CD pipelines, for which building and packaging code, publishing
+images, and deploying containers all happen within the cluster. Indeed, OpenShift/OKD and Minikube come
+with built-in cloud-native registries exactly for this purpose.
 
 ### The challenge
 
 Setting up cloud-native registries can be quite challenging. Your private TLS certificates, certificate
 authorities, and authorization credentials, must all be configured into the cluster's container runtime.
 This is in addition to the requirement that the container runtime, which runs on the host, can route to
-the registry, which sits on Kubernetes's control plane. The container runtime might also need access to
-the registry's domain name for TLS verification.
+the registry's IP address, which in this case sits on Kubernetes's control plane. The container runtime
+might also need access to the registry's domain name for TLS verification, which could require a DNS
+relay, and `/etc/hosts` update, or similar.
 
 Additionally, beyond just getting the cloud-native registry to work with the container runtime, it can
 be challenging to access it from outside the cluster using tools like Buildah and Skopeo. Would an
-ingress to the cluster be required? A ingress is non-trivial and sometimes impossible to set up. And what
-about TLS authentication and authorization?
+ingress to the cluster be required? An ingress is non-trivial and sometimes impossible to set up. And
+what about TLS authentication and authorization from the outside?
 
-### A solution
 
-Reposure can assist with many of these challenges.
+Reposure's Features
+-------------------
+
+Reposure can assist with many of the challenges mentioned abvove.
 
 The Reposure operator manages registry "surrogates", which run as pods in the same cluster as the
 registries. They are configured with the necessary TLS authentication and authorization, if required.
 The surrogates can fetch and push container images for you. No ingress is required, just normal
-`kubectl` access to the cluster. The `reposure` CLI tool (it's also a `kubectl` plugin) does much
-of this work for you.
+`kubectl` access to the cluster's API server. The `reposure` CLI tool (it's also a `kubectl` plugin)
+simplifies access to these surrogates.
 
-If you need programmatic access to the registry from *outside* the cluster, Reposure provides a client
-API for its surrogate (Go language).
+Furthermore, Reposure provides APIs with which your application can access these registries:
 
-If on the other hand you need programmatic access to the registry from *inside* the cluster (direct,
-without the surrogate), Reposure provides a client API based on
-[go-containerregistry](https://github.com/google/go-containerregistry) (Go language).
-
-Reposure has baked-in support for the built-in registries of OpenShift and Minikube. Additionally, it
-can deploy its own "simple" cloud-native registry, based on the reference Docker registry, which can
-be useful for testing and development. (Note that by default it uses self-signed certificates, which
-may be inaccessible to your container runtime.) For more robust implementations, see
-[Harbor](https://goharbor.io/) and [Quay](https://www.projectquay.io/).
+* The ["surrogate" client](client/surrogate/) allows access to the surrogate from outside the
+  cluster, and is essentially what the `reposure` CLI tool uses.
+* The ["direct" client](client/direct/) allows programmatic direct access to the registry from
+  *inside* the cluster, *not* via the surrogate but rather via the
+  [go-containerregistry](https://github.com/google/go-containerregistry) library. Reposure will
+  handle configuring the client with the authentication and authorization.
 
 
 How the Surrogate Works
 -----------------------
 
-The Reposure surrogate is emphatically *not* a proxy. A registry proxy would not in fact help you
-access the registry from outside the cluster because it would just shift the challenge and might even
-makes things more difficult. The problem is that tools like [`buildah`](https://buildah.io/) and
-[`skopeo`](https://github.com/containers/skopeo) would still need to securely connect to that proxy.
+The Reposure surrogate is deliberately *not* a proxy. A registry proxy would not in fact help you
+access the registry from outside the cluster because it would just shift the challenge and might
+even makes things more difficult. Your outside tools, such as [`buildah`](https://buildah.io/) and
+[`skopeo`](https://github.com/containers/skopeo), would still need to securely connect to that
+proxy. Terminating TLS would also be challenging.
 
 The alternative we chose is to use Kubernetes's existing control plane, which allows for executing
-commands in containers as well as streaming stdout and stdin (via the SPDY procotol). Thus, instead
-of dealing with container images directly we will be using files, specifically tarballs of images.
+commands in containers as well as streaming stdout and stdin (via the SPDY procotol). We can use
+this to transfer files (tarballs of container images) to and from the cluster, similarly to how
+`kubectl cp` works. Thus, the surrogate functions as a
+[jump server](https://en.wikipedia.org/wiki/Jump_server).
 
-The Reposure surrogate is implemented as a combination of two components:
+The Reposure surrogate comprises of two components:
 
-* A file spooler, which watches a directory for incoming tarballs and pushes them to the registry.
-  The spooler also handles deleting images from the registry via special filenames.
-* A client utility, `reposure`, which can pull tarballs from the registry and deliver them to stdout.
-  The utility can also list images in the registry, again delivering the list to stdout.
+* A [file spooler](reposure-registry-spooler), which watches a directory for incoming tarballs and
+  pushes them to the registry. The spooler also handles deleting images from the registry via
+  special filenames.
+* A [client utility](reposure-registry-client), which can pull tarballs from the registry and
+  deliver them to stdout. The utility can also list images in the registry, again delivering the
+  list to stdout.
 
-Together these tow components allow you to push, pull, delete, and list images using the basic
+Together these two components allow you to push, pull, delete, and list images using the basic
 `kubectl` connectivity you already have.
 
 ### Downsides
 
-The problem with this solution is that if you are working outside the cluster then you would need to
-use the `reposure` tool instead of your usual tools. So, for example, you can't use `buildah` to
-directly push an image to the registry.
+The problem with this solution is that if you are working outside the cluster then you would need
+to use the `reposure` tool instead of your usual tools. So, for example, you can't use `buildah`
+to directly push an image to the registry. (Wouldn't it be nice if `buildah` had built-in support
+for Reposure?)
 
-As workaround is to export your image to a tarball and push that instead. You would also need to
-re-tag it so that Kubernetes's container runtime can pull it. You can do all of this using the
-`podman` tool. For example, if you are using `buildah` to build locally:
+The workaround is to export your image to a tarball and push that instead. Note, though, that you
+would also need to re-tag it so that Kubernetes's container runtime can pull it. You can do all of
+this using the `podman` tool. Here's an example workflow:
 
     # Build
     CONTAINER_ID=$(buildah from scratch)
@@ -119,24 +131,23 @@ re-tag it so that Kubernetes's container runtime can pull it. You can do all of 
     # Push
     reposure image push myregistry myrepo/myimage myimage.tar
 
-(Note that spooler supports `.tar` as well as `.tar.gz` or `.tgz`.)
-
-TODO: The `reposure` CLI currently does not block until the spooler succeeds or fails, and also there
-is no forwarding of error messages.
+(Note that Reposure accepts `.tar` as well as `.tar.gz` or `.tgz`.)
 
 ### But, On the Other Hand...
 
-Reposure's limitation also comes with a very useful advantage.
+This downside also comes with a very useful advantage.
 
 A side effect of the fact that the surrogate works directly with files is that it makes it very
-easy to store arbitrary files on the registry, not just container images. You don't even have to
-package them as tarballs: the spooler will create a tarball for you for files that are not already
-tarballs (they are essentially container images with a single layer). Likewise, when you pull a
-tarball, the `reposure` tool can automatically unpack that single layer for you. For example:
+easy to store arbitrary files in the registry, not just container images. You don't even have to
+package them as tarballs: the spooler will automatically wrap the file in a tarball for you if
+it's not one already. (This is essentially a container image with a single layer). Likewise, when
+you pull a tarball, the `reposure` tool can automatically unpack that single layer for you. For
+example:
 
     echo 'hello world' > hello.txt
     reposure image push myregistry myrepo/hello hello.txt
     reposure image pull myregistry myrepo/hello --unpack
+
 
 Installation
 ------------
@@ -184,8 +195,8 @@ that it is stored in a "registry".
 ### Why is OpenShift giving me access errors for pods using images from the built-in registry?
 
 OpenShift's added security requires the repository name and namespace of the pod to be identical.
-This improves isolation between namespaces: one namespace can't pull images that belong to a
-different namespace.
+This improves isolation between namespaces: a namespace can't pull images that belong to another
+namespace.
 
 ### Why is it called "Reposure"?
 
