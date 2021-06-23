@@ -31,7 +31,6 @@ type Client struct {
 
 func NewClient(kubernetes kubernetes.Interface, rest rest.Interface, config *rest.Config, context contextpkg.Context, stderr io.Writer, namespace string, surrogateAppName string, spoolerContainerName string, host string, certificate string, username string, password string, token string) *Client {
 	if host == "" {
-		// Default for sidecars
 		host = "localhost:5000"
 	}
 
