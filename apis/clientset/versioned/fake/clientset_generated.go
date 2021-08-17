@@ -58,7 +58,10 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 	return c.tracker
 }
 
-var _ clientset.Interface = &Clientset{}
+var (
+	_ clientset.Interface = &Clientset{}
+	_ testing.FakeClient  = &Clientset{}
+)
 
 // ReposureV1alpha1 retrieves the ReposureV1alpha1Client
 func (c *Clientset) ReposureV1alpha1() reposurev1alpha1.ReposureV1alpha1Interface {

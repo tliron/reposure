@@ -122,7 +122,7 @@ this using the `podman` tool. Here's an example workflow:
     buildah commit $CONTAINER_ID localhost/myrepo/myimage
 
     # Re-tag
-    HOST=$(reposure registry info myrepo host)
+    HOST=$(reposure registry info myregistry host)
     podman tag localhost/myrepo/myimage $HOST/myrepo/myimage
 
     # Export
