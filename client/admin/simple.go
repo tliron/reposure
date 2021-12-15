@@ -202,14 +202,14 @@ func (self *Client) createSimpleDeployment(registryAddress string, serviceAccoun
 							},
 							// Note: Probes skip certificate validation for HTTPS
 							LivenessProbe: &core.Probe{
-								Handler: core.Handler{
+								ProbeHandler: core.ProbeHandler{
 									HTTPGet: &core.HTTPGetAction{
 										Port: intstr.FromInt(5000),
 									},
 								},
 							},
 							ReadinessProbe: &core.Probe{
-								Handler: core.Handler{
+								ProbeHandler: core.ProbeHandler{
 									HTTPGet: &core.HTTPGetAction{
 										Port: intstr.FromInt(5000),
 									},
@@ -248,8 +248,8 @@ func (self *Client) createSimpleDeployment(registryAddress string, serviceAccoun
 			},
 		)
 
-		deployment.Spec.Template.Spec.Containers[0].LivenessProbe.Handler.HTTPGet.Scheme = core.URISchemeHTTPS
-		deployment.Spec.Template.Spec.Containers[0].ReadinessProbe.Handler.HTTPGet.Scheme = core.URISchemeHTTPS
+		deployment.Spec.Template.Spec.Containers[0].LivenessProbe.ProbeHandler.HTTPGet.Scheme = core.URISchemeHTTPS
+		deployment.Spec.Template.Spec.Containers[0].ReadinessProbe.ProbeHandler.HTTPGet.Scheme = core.URISchemeHTTPS
 
 		deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, core.Volume{
 			Name: "tls",
