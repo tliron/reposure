@@ -6,10 +6,10 @@ HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
 
 gofmt -w -s -e \
 	"$ROOT/client/admin" \
-	"$ROOT/client/command" \
 	"$ROOT/client/direct" \
 	"$ROOT/client/registry" \
-	"$ROOT/client/spooler" \
+	"$ROOT/client/surrogate/command" \
+	"$ROOT/client/surrogate/spooler" \
 	"$ROOT/controller" \
 	"$ROOT/reposure" \
 	"$ROOT/reposure/commands" \

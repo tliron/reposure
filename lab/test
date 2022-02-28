@@ -124,4 +124,7 @@ fi
 m 'listing images'
 
 # Not permitted on OpenShift
-reposure image list default -v
+if [ "$PROVIDER" != openshift ]; then
+	reposure image list default -v
+fi
+

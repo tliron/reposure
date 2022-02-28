@@ -60,6 +60,7 @@ func (self *Client) SurrogateCommandClient(registry *resources.Registry) (*comma
 				username,
 				password,
 				token,
+				logging.GetLoggerf("%s.command", self.LogName),
 			), nil
 		} else {
 			return nil, err

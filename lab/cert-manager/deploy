@@ -14,7 +14,7 @@ fi
 . "$HERE/../_env"
 
 m 'deploying cert-manager...'
-kubectl apply --filename="https://github.com/jetstack/cert-manager/releases/download/v$CERT_MANAGER_VERSION/cert-manager.yaml"
+kubectl apply --filename="https://github.com/cert-manager/cert-manager/releases/download/v$CERT_MANAGER_VERSION/cert-manager.yaml"
 
 m 'waiting for cert-manager to start...'
 POD=$(kubectl get pods --namespace=cert-manager --selector=app=webhook --output=jsonpath={.items[0].metadata.name})

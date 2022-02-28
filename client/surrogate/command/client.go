@@ -4,6 +4,7 @@ import (
 	contextpkg "context"
 	"io"
 
+	"github.com/tliron/kutil/logging"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -27,9 +28,11 @@ type Client struct {
 	RegistryUsername     string
 	RegistryPassword     string
 	RegistryToken        string
+
+	Log logging.Logger
 }
 
-func NewClient(kubernetes kubernetes.Interface, rest rest.Interface, config *rest.Config, context contextpkg.Context, stderr io.Writer, namespace string, surrogateAppName string, spoolerContainerName string, host string, certificate string, username string, password string, token string) *Client {
+func NewClient(kubernetes kubernetes.Interface, rest rest.Interface, config *rest.Config, context contextpkg.Context, stderr io.Writer, namespace string, surrogateAppName string, spoolerContainerName string, host string, certificate string, username string, password string, token string, log logging.Logger) *Client {
 	if host == "" {
 		host = "localhost:5000"
 	}
@@ -48,5 +51,6 @@ func NewClient(kubernetes kubernetes.Interface, rest rest.Interface, config *res
 		RegistryUsername:     username,
 		RegistryPassword:     password,
 		RegistryToken:        token,
+		Log:                  log,
 	}
 }

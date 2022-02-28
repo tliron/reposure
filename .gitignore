@@ -1,3 +1,4 @@
 .project
+go.work
 
 dist/

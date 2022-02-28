@@ -110,10 +110,10 @@ func NewController(context contextpkg.Context, toolName string, clusterMode bool
 		"registries",
 		registryInformer.Informer(),
 		processorPeriod,
-		func(name string, namespace string) (interface{}, error) {
+		func(name string, namespace string) (any, error) {
 			return self.Client.GetRegistry(namespace, name)
 		},
-		func(object interface{}) (bool, error) {
+		func(object any) (bool, error) {
 			return self.processRegistry(object.(*reposureresources.Registry))
 		},
 	))

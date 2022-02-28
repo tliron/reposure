@@ -5,7 +5,7 @@ _HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
 
 MODULE=github.com/tliron/reposure
 
-K8S_VERSION=0.23.0
+K8S_VERSION=0.23.4
 
 ROOT=$(readlink --canonicalize "$_HERE/..")
 

@@ -148,6 +148,8 @@ example:
     reposure image push myregistry myrepo/hello hello.txt
     reposure image pull myregistry myrepo/hello --unpack
 
+The [ORAS](https://oras.land/) tool provides similar functionality.
+
 
 Installation
 ------------
