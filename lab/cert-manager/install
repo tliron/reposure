@@ -16,4 +16,4 @@ if [ "$1" == -f ]; then
 fi
 
 install_tool kubectl-cert_manager "$CERT_MANAGER_VERSION" \
-"https://github.com/jetstack/cert-manager/releases/download/v$CERT_MANAGER_VERSION/kubectl-cert_manager-linux-amd64.tar.gz" 0
+"https://github.com/cert-manager/cert-manager/releases/download/v$CERT_MANAGER_VERSION/kubectl-cert_manager-linux-amd64.tar.gz" 0

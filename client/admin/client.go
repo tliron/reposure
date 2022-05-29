@@ -3,7 +3,7 @@ package admin
 import (
 	contextpkg "context"
 
-	certmanagerpkg "github.com/jetstack/cert-manager/pkg/client/clientset/versioned"
+	certmanagerpkg "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
 	"github.com/tliron/kutil/logging"
 	reposurepkg "github.com/tliron/reposure/apis/clientset/versioned"
 	apiextensionspkg "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"

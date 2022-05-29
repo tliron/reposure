@@ -3,8 +3,8 @@ package admin
 import (
 	"fmt"
 
-	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	certmanagermeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
+	certmanager "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	certmanagermeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/tliron/kutil/kubernetes"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
@@ -19,7 +19,7 @@ var simpleTlsKeyPath = fmt.Sprintf("%s/%s", tlsMountPath, core.TLSPrivateKeyKey)
 var simpleHtpasswdPath = fmt.Sprintf("%s/htpasswd", simpleHtpasswdMountPath)
 
 func (self *Client) InstallSimple(sourceRegistryHost string, authentication bool, authorization bool, wait bool) error {
-	// Authentication requires Cert-Manager: https://github.com/jetstack/cert-manager
+	// Authentication requires Cert-Manager: https://github.com/cert-manager/cert-manager
 
 	// Authorization expects a generic secret named "reposure-simple-htpasswd",
 	// which is a file named htpasswd in htpasswd format that uses bcrypt for passwords
