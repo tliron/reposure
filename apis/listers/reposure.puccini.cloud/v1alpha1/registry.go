@@ -32,7 +32,7 @@ func NewRegistryLister(indexer cache.Indexer) RegistryLister {
 
 // List lists all Registries in the indexer.
 func (s *registryLister) List(selector labels.Selector) (ret []*v1alpha1.Registry, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m any) {
+	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
 		ret = append(ret, m.(*v1alpha1.Registry))
 	})
 	return ret, err
@@ -64,7 +64,7 @@ type registryNamespaceLister struct {
 
 // List lists all Registries in the indexer for a given namespace.
 func (s registryNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.Registry, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m any) {
+	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
 		ret = append(ret, m.(*v1alpha1.Registry))
 	})
 	return ret, err
