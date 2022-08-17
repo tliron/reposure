@@ -40,8 +40,11 @@ var command = &cobra.Command{
 	Use:   "reposure-registry-spooler",
 	Short: "Spooler for a container image registry",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		err := terminal.ProcessColorizeFlag(colorize)
+		cleanup, err := terminal.ProcessColorizeFlag(colorize)
 		util.FailOnError(err)
+		if cleanup != nil {
+			util.OnExitError(cleanup)
+		}
 		if logTo == "" {
 			logging.Configure(verbose, nil)
 		} else {

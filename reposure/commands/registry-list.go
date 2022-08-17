@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/tliron/kutil/ard"
@@ -53,6 +54,6 @@ func ListRegistries() {
 		for index, registry := range registries.Items {
 			list[index] = resources.RegistryToARD(&registry)
 		}
-		transcribe.Print(list, format, terminal.Stdout, strict, pretty)
+		transcribe.Print(list, format, os.Stdout, strict, pretty)
 	}
 }

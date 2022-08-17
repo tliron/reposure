@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/tliron/kutil/terminal"
@@ -31,41 +32,41 @@ func DescribeRegistry(registryName string) {
 	util.FailOnError(err)
 
 	if format != "" {
-		transcribe.Print(resources.RegistryToARD(registry), format, terminal.Stdout, strict, pretty)
+		transcribe.Print(resources.RegistryToARD(registry), format, os.Stdout, strict, pretty)
 	} else {
-		terminal.Printf("%s: %s\n", terminal.Stylize.TypeName("Name"), terminal.Stylize.Value(registry.Name))
-		terminal.Printf("%s: %s\n", terminal.Stylize.TypeName("Type"), terminal.Stylize.Value(string(registry.Spec.Type)))
+		terminal.Printf("%s: %s\n", terminal.DefaultStylist.TypeName("Name"), terminal.DefaultStylist.Value(registry.Name))
+		terminal.Printf("%s: %s\n", terminal.DefaultStylist.TypeName("Type"), terminal.DefaultStylist.Value(string(registry.Spec.Type)))
 
 		if registry.Spec.Direct != nil {
-			terminal.Printf("  %s:\n", terminal.Stylize.TypeName("Direct"))
+			terminal.Printf("  %s:\n", terminal.DefaultStylist.TypeName("Direct"))
 			if registry.Spec.Direct.Host != "" {
-				terminal.Printf("    %s: %s\n", terminal.Stylize.TypeName("Host"), terminal.Stylize.Value(registry.Spec.Direct.Host))
+				terminal.Printf("    %s: %s\n", terminal.DefaultStylist.TypeName("Host"), terminal.DefaultStylist.Value(registry.Spec.Direct.Host))
 			}
 		}
 
 		if registry.Spec.Indirect != nil {
-			terminal.Printf("  %s:\n", terminal.Stylize.TypeName("Indirect"))
+			terminal.Printf("  %s:\n", terminal.DefaultStylist.TypeName("Indirect"))
 			if registry.Spec.Indirect.Namespace != "" {
-				terminal.Printf("    %s: %s\n", terminal.Stylize.TypeName("Namespace"), terminal.Stylize.Value(registry.Spec.Indirect.Namespace))
+				terminal.Printf("    %s: %s\n", terminal.DefaultStylist.TypeName("Namespace"), terminal.DefaultStylist.Value(registry.Spec.Indirect.Namespace))
 			}
 			if registry.Spec.Indirect.Service != "" {
-				terminal.Printf("    %s: %s\n", terminal.Stylize.TypeName("Service"), terminal.Stylize.Value(registry.Spec.Indirect.Service))
+				terminal.Printf("    %s: %s\n", terminal.DefaultStylist.TypeName("Service"), terminal.DefaultStylist.Value(registry.Spec.Indirect.Service))
 			}
-			terminal.Printf("    %s: %s\n", terminal.Stylize.TypeName("Port"), terminal.Stylize.Value(fmt.Sprintf("%d", registry.Spec.Indirect.Port)))
+			terminal.Printf("    %s: %s\n", terminal.DefaultStylist.TypeName("Port"), terminal.DefaultStylist.Value(fmt.Sprintf("%d", registry.Spec.Indirect.Port)))
 		}
 
 		if registry.Spec.AuthenticationSecret != "" {
-			terminal.Printf("%s: %s\n", terminal.Stylize.TypeName("AuthenticationSecret"), terminal.Stylize.Value(registry.Spec.AuthenticationSecret))
+			terminal.Printf("%s: %s\n", terminal.DefaultStylist.TypeName("AuthenticationSecret"), terminal.DefaultStylist.Value(registry.Spec.AuthenticationSecret))
 		}
 		if registry.Spec.AuthenticationSecretDataKey != "" {
-			terminal.Printf("%s: %s\n", terminal.Stylize.TypeName("AuthenticationSecretDataKey"), terminal.Stylize.Value(registry.Spec.AuthenticationSecretDataKey))
+			terminal.Printf("%s: %s\n", terminal.DefaultStylist.TypeName("AuthenticationSecretDataKey"), terminal.DefaultStylist.Value(registry.Spec.AuthenticationSecretDataKey))
 		}
 		if registry.Spec.AuthorizationSecret != "" {
-			terminal.Printf("%s: %s\n", terminal.Stylize.TypeName("AuthorizationSecret"), terminal.Stylize.Value(registry.Spec.AuthorizationSecret))
+			terminal.Printf("%s: %s\n", terminal.DefaultStylist.TypeName("AuthorizationSecret"), terminal.DefaultStylist.Value(registry.Spec.AuthorizationSecret))
 		}
 
 		if registry.Status.SurrogatePod != "" {
-			terminal.Printf("%s: %s\n", terminal.Stylize.TypeName("SurrogatePod"), terminal.Stylize.Value(registry.Status.SurrogatePod))
+			terminal.Printf("%s: %s\n", terminal.DefaultStylist.TypeName("SurrogatePod"), terminal.DefaultStylist.Value(registry.Status.SurrogatePod))
 		}
 	}
 }
