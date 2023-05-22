@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/tliron/commonlog"
 	kubernetesutil "github.com/tliron/kutil/kubernetes"
-	"github.com/tliron/kutil/logging"
 	reposureclientset "github.com/tliron/reposure/apis/clientset/versioned"
 	reposureinformers "github.com/tliron/reposure/apis/informers/externalversions"
 	reposurelisters "github.com/tliron/reposure/apis/listers/reposure.puccini.cloud/v1alpha1"
@@ -43,7 +43,7 @@ type Controller struct {
 	Registries reposurelisters.RegistryLister
 
 	Context contextpkg.Context
-	Log     logging.Logger
+	Log     commonlog.Logger
 }
 
 func NewController(context contextpkg.Context, toolName string, clusterMode bool, clusterRole string, namespace string, dynamic dynamicpkg.Interface, kubernetes kubernetes.Interface, apiExtensions apiextensionspkg.Interface, reposure reposureclientset.Interface, config *restpkg.Config, informerResyncPeriod time.Duration, stopChannel <-chan struct{}) *Controller {
@@ -54,7 +54,7 @@ func NewController(context contextpkg.Context, toolName string, clusterMode bool
 		}
 	}
 
-	log := logging.GetLoggerf("%s.controller", toolName)
+	log := commonlog.GetLoggerf("%s.controller", toolName)
 
 	self := Controller{
 		Config:      config,

@@ -1,7 +1,7 @@
 package admin
 
 import (
-	"github.com/tliron/kutil/logging"
+	"github.com/tliron/commonlog"
 	directclient "github.com/tliron/reposure/client/direct"
 	registryclient "github.com/tliron/reposure/client/registry"
 	commandclient "github.com/tliron/reposure/client/surrogate/command"
@@ -14,7 +14,7 @@ func (self *Client) RegistryClient() *registryclient.Client {
 		self.Kubernetes,
 		self.Reposure,
 		self.Context,
-		logging.GetLoggerf("%s.registry", self.LogName),
+		commonlog.GetLoggerf("%s.registry", self.LogName),
 		self.Namespace,
 		tlsMountPath,
 	)
@@ -60,7 +60,7 @@ func (self *Client) SurrogateCommandClient(registry *resources.Registry) (*comma
 				username,
 				password,
 				token,
-				logging.GetLoggerf("%s.command", self.LogName),
+				commonlog.GetLoggerf("%s.command", self.LogName),
 			), nil
 		} else {
 			return nil, err

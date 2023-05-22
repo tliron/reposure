@@ -8,7 +8,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	gzip "github.com/klauspost/pgzip"
-	urlpkg "github.com/tliron/kutil/url"
+	urlpkg "github.com/tliron/exturl"
 )
 
 func (self *Client) PushTarball(path string, imageName string) error {

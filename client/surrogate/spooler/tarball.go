@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	urlpkg "github.com/tliron/kutil/url"
+	urlpkg "github.com/tliron/exturl"
 )
 
 func (self *Client) PushTarballFromURL(imageName string, url urlpkg.URL) error {

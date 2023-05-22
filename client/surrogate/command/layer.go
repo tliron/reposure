@@ -3,7 +3,7 @@ package command
 import (
 	"io"
 
-	"github.com/tliron/kutil/url"
+	"github.com/tliron/exturl"
 )
 
 func (self *Client) PullLayer(imageName string, writer io.Writer) error {
@@ -17,7 +17,7 @@ func (self *Client) PullLayer(imageName string, writer io.Writer) error {
 		}
 	}()
 
-	decoder := url.NewContainerImageLayerDecoder(pipeReader)
+	decoder := exturl.NewContainerImageLayerDecoder(pipeReader)
 	if _, err := io.Copy(writer, decoder.Decode()); err == nil {
 		return nil
 	} else {

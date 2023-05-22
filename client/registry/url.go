@@ -8,7 +8,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	gzip "github.com/klauspost/pgzip"
-	urlpkg "github.com/tliron/kutil/url"
+	urlpkg "github.com/tliron/exturl"
 	resources "github.com/tliron/reposure/resources/reposure.puccini.cloud/v1alpha1"
 )
 

@@ -3,7 +3,7 @@ package spooler
 import (
 	"io"
 
-	urlpkg "github.com/tliron/kutil/url"
+	urlpkg "github.com/tliron/exturl"
 	"github.com/tliron/kutil/util"
 )
 

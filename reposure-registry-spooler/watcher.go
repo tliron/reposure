@@ -4,13 +4,13 @@ import (
 	"strings"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/tliron/kutil/logging"
+	"github.com/tliron/commonlog"
 )
 
 type Watcher struct {
 	Watcher  *fsnotify.Watcher
 	Handlers []*Handler
-	Log      logging.Logger
+	Log      commonlog.Logger
 }
 
 type HandlerFunc func(path string)
@@ -24,7 +24,7 @@ func NewWatcher() (*Watcher, error) {
 	if watcher, err := fsnotify.NewWatcher(); err == nil {
 		return &Watcher{
 			Watcher: watcher,
-			Log:     logging.GetLogger("watcher"),
+			Log:     commonlog.GetLogger("watcher"),
 		}, nil
 	} else {
 		return nil, err

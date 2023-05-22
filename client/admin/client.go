@@ -4,7 +4,7 @@ import (
 	contextpkg "context"
 
 	certmanagerpkg "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
-	"github.com/tliron/kutil/logging"
+	"github.com/tliron/commonlog"
 	reposurepkg "github.com/tliron/reposure/apis/clientset/versioned"
 	apiextensionspkg "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	kubernetespkg "k8s.io/client-go/kubernetes"
@@ -35,7 +35,7 @@ type Client struct {
 	SimpleImageReference    string
 
 	LogName string
-	Log     logging.Logger
+	Log     commonlog.Logger
 }
 
 func NewClient(kubernetes kubernetespkg.Interface, apiExtensions apiextensionspkg.Interface, reposure reposurepkg.Interface, rest restpkg.Interface, config *restpkg.Config, context contextpkg.Context, clusterMode bool, clusterRole string, namespace string, namePrefix string, partOf string, managedBy string, operatorImageReference string, surrogateImageReference string, simpleImageReference string, logName string) *Client {
@@ -56,6 +56,6 @@ func NewClient(kubernetes kubernetespkg.Interface, apiExtensions apiextensionspk
 		SurrogateImageReference: surrogateImageReference,
 		SimpleImageReference:    simpleImageReference,
 		LogName:                 logName,
-		Log:                     logging.GetLoggerf("%s.admin", logName),
+		Log:                     commonlog.GetLoggerf("%s.admin", logName),
 	}
 }
