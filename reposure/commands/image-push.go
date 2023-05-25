@@ -1,6 +1,8 @@
 package commands
 
 import (
+	contextpkg "context"
+
 	"github.com/spf13/cobra"
 	"github.com/tliron/kutil/util"
 )
@@ -14,11 +16,11 @@ var imagePushCommand = &cobra.Command{
 	Short: "Push an image to a registry",
 	Args:  cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
-		PushImage(args[0], args[1], args[2])
+		PushImage(contextpkg.TODO(), args[0], args[1], args[2])
 	},
 }
 
-func PushImage(registryName string, imageName string, imagePath string) {
+func PushImage(context contextpkg.Context, registryName string, imageName string, imagePath string) {
 	adminClient := NewClient().AdminClient()
 	registry, err := adminClient.GetRegistry(namespace, registryName)
 	util.FailOnError(err)
@@ -28,6 +30,6 @@ func PushImage(registryName string, imageName string, imagePath string) {
 	// 1) block until spooler picks up file
 	// 2) forward errors from spooler
 
-	err = surrogateSpoolerClient.PushTarballFromFile(imageName, imagePath)
+	err = surrogateSpoolerClient.PushTarballFromFile(context, imageName, imagePath)
 	util.FailOnError(err)
 }

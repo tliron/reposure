@@ -1,15 +1,16 @@
 package spooler
 
 import (
+	contextpkg "context"
 	"io"
 
-	urlpkg "github.com/tliron/exturl"
+	"github.com/tliron/exturl"
 	"github.com/tliron/kutil/util"
 )
 
-func (self *Client) PushLayerFromURL(fileName string, url urlpkg.URL) error {
-	if size, err := urlpkg.Size(url); err == nil {
-		if reader, err := url.Open(); err == nil {
+func (self *Client) PushLayerFromURL(context contextpkg.Context, fileName string, url exturl.URL) error {
+	if size, err := exturl.Size(context, url); err == nil {
+		if reader, err := url.Open(context); err == nil {
 			defer reader.Close()
 			return self.PushLayer(fileName, reader, size)
 		} else {

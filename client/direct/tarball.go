@@ -1,6 +1,7 @@
 package direct
 
 import (
+	contextpkg "context"
 	"io"
 	"os"
 
@@ -8,14 +9,15 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	gzip "github.com/klauspost/pgzip"
-	urlpkg "github.com/tliron/exturl"
+	"github.com/tliron/exturl"
 )
 
-func (self *Client) PushTarball(path string, imageName string) error {
+func (self *Client) PushTarball(context contextpkg.Context, path string, imageName string) error {
 	name := self.getName(imageName)
+	options := append(self.Options, remote.WithContext(context))
 	if tag, err := namepkg.NewTag(name); err == nil {
 		if image, err := tarball.ImageFromPath(path, &tag); err == nil {
-			return remote.Write(tag, image, self.Options...)
+			return remote.Write(tag, image, options...)
 		} else {
 			return err
 		}
@@ -24,7 +26,9 @@ func (self *Client) PushTarball(path string, imageName string) error {
 	}
 }
 
-func (self *Client) PushGzippedTarball(path string, imageName string) error {
+func (self *Client) PushGzippedTarball(context contextpkg.Context, path string, imageName string) error {
+	options := append(self.Options, remote.WithContext(context))
+
 	opener := func() (io.ReadCloser, error) {
 		if reader, err := os.Open(path); err == nil {
 			return gzip.NewReader(reader)
@@ -36,7 +40,7 @@ func (self *Client) PushGzippedTarball(path string, imageName string) error {
 	name := self.getName(imageName)
 	if tag, err := namepkg.NewTag(name); err == nil {
 		if image, err := tarball.Image(opener, &tag); err == nil {
-			return remote.Write(tag, image, self.Options...)
+			return remote.Write(tag, image, options...)
 		} else {
 			return err
 		}
@@ -45,9 +49,11 @@ func (self *Client) PushGzippedTarball(path string, imageName string) error {
 	}
 }
 
-func (self *Client) PushGzippedTarballFromURL(url urlpkg.URL, imageName string) (string, error) {
+func (self *Client) PushGzippedTarballFromURL(context contextpkg.Context, url exturl.URL, imageName string) (string, error) {
+	options := append(self.Options, remote.WithContext(context))
+
 	opener := func() (io.ReadCloser, error) {
-		if reader, err := url.Open(); err == nil {
+		if reader, err := url.Open(context); err == nil {
 			return gzip.NewReader(reader)
 		} else {
 			return nil, err
@@ -58,7 +64,7 @@ func (self *Client) PushGzippedTarballFromURL(url urlpkg.URL, imageName string) 
 		name := self.getName(imageName)
 		if tag, err := namepkg.NewTag(name); err == nil {
 			if image, err := tarball.Image(opener, &contentTag); err == nil {
-				if err := remote.Write(tag, image, self.Options...); err == nil {
+				if err := remote.Write(tag, image, options...); err == nil {
 					return name, nil
 				} else {
 					return "", err
@@ -74,10 +80,11 @@ func (self *Client) PushGzippedTarballFromURL(url urlpkg.URL, imageName string) 
 	}
 }
 
-func (self *Client) PullTarball(imageName string, path string) error {
+func (self *Client) PullTarball(context contextpkg.Context, imageName string, path string) error {
 	name := self.getName(imageName)
+	options := append(self.Options, remote.WithContext(context))
 	if tag, err := namepkg.NewTag(name); err == nil {
-		if image, err := remote.Image(tag, self.Options...); err == nil {
+		if image, err := remote.Image(tag, options...); err == nil {
 			var writer io.Writer
 			if path == "" {
 				writer = os.Stdout

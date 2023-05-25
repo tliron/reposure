@@ -1,28 +1,28 @@
 package spooler
 
 import (
+	contextpkg "context"
 	"io"
 	"os"
 	"strings"
 
-	urlpkg "github.com/tliron/exturl"
+	"github.com/tliron/exturl"
+	"github.com/tliron/kutil/util"
 )
 
-func (self *Client) PushTarballFromURL(imageName string, url urlpkg.URL) error {
-	reader, err := url.Open()
+func (self *Client) PushTarballFromURL(context contextpkg.Context, imageName string, url exturl.URL) error {
+	reader, err := url.Open(context)
 	if err != nil {
 		return err
 	}
 
-	reader, err = url.Open()
+	reader, err = url.Open(context)
 	if err != nil {
 		return err
 	}
 
-	if readCloser, ok := reader.(io.ReadCloser); ok {
-		defer readCloser.Close()
-	}
-
+	reader = util.NewContextualReadCloser(context, reader)
+	defer reader.Close()
 	if err = self.PushTarball(imageName, reader); err == nil {
 		return nil
 	} else {
@@ -30,7 +30,7 @@ func (self *Client) PushTarballFromURL(imageName string, url urlpkg.URL) error {
 	}
 }
 
-func (self *Client) PushTarballFromFile(imageName string, path string) error {
+func (self *Client) PushTarballFromFile(context contextpkg.Context, imageName string, path string) error {
 	fileName := imageName
 	if strings.HasSuffix(path, ".tar.gz") {
 		fileName += ".tar.gz"
@@ -41,8 +41,9 @@ func (self *Client) PushTarballFromFile(imageName string, path string) error {
 	}
 
 	if file, err := os.Open(path); err == nil {
-		defer file.Close()
-		return self.PushTarball(fileName, file)
+		reader := util.NewContextualReadCloser(context, file)
+		defer reader.Close()
+		return self.PushTarball(fileName, reader)
 	} else {
 		return err
 	}

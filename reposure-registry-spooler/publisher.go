@@ -37,11 +37,11 @@ func (self *Publisher) Close() {
 
 func (self *Publisher) Run() {
 	defer self.Close()
-	for self.Process() {
+	for self.Process(contextpkg.TODO()) {
 	}
 }
 
-func (self *Publisher) Process() bool {
+func (self *Publisher) Process(context contextpkg.Context) bool {
 	if path, ok := <-self.Work; ok {
 		// Lock file
 		lock := flock.New(path)
@@ -66,7 +66,7 @@ func (self *Publisher) Process() bool {
 		if strings.HasSuffix(path, "!") {
 			self.Delete(path[:len(path)-1])
 		} else {
-			self.Publish(path)
+			self.Publish(context, path)
 		}
 
 		// Delete file
@@ -83,16 +83,16 @@ func (self *Publisher) Process() bool {
 	}
 }
 
-func (self *Publisher) Publish(path string) {
+func (self *Publisher) Publish(context contextpkg.Context, path string) {
 	imageName := self.getImageName(path)
 
 	var err error
 	if strings.HasSuffix(path, ".tar.gz") || strings.HasSuffix(path, ".tgz") {
 		self.Log.Infof("publishing gzipped tarball %q to image %q", path, imageName)
-		err = self.Client.PushGzippedTarball(path, imageName)
+		err = self.Client.PushGzippedTarball(context, path, imageName)
 	} else if strings.HasSuffix(path, ".tar") {
 		self.Log.Infof("publishing tarball %q to image %q", path, imageName)
-		err = self.Client.PushTarball(path, imageName)
+		err = self.Client.PushTarball(context, path, imageName)
 	} else {
 		self.Log.Infof("publishing layer %q to image %q", path, imageName)
 		if file, err2 := os.Open(path); err2 == nil {

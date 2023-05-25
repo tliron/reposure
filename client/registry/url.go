@@ -1,6 +1,7 @@
 package registry
 
 import (
+	contextpkg "context"
 	"fmt"
 	"io"
 
@@ -8,11 +9,11 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	gzip "github.com/klauspost/pgzip"
-	urlpkg "github.com/tliron/exturl"
+	"github.com/tliron/exturl"
 	resources "github.com/tliron/reposure/resources/reposure.puccini.cloud/v1alpha1"
 )
 
-func (self *Client) UpdateURLContext(registry *resources.Registry, urlContext *urlpkg.Context) error {
+func (self *Client) UpdateURLContext(registry *resources.Registry, urlContext *exturl.Context) error {
 	if host, roundTripper, err := self.GetHTTPRoundTripper(registry); err == nil {
 		if roundTripper != nil {
 			urlContext.SetHTTPRoundTripper(host, roundTripper)
@@ -33,13 +34,13 @@ func (self *Client) UpdateURLContext(registry *resources.Registry, urlContext *u
 }
 
 // TODO: what uses this?
-func (self *Client) PushTarball(artifactName string, sourceUrl urlpkg.URL, registry *resources.Registry) (string, error) {
+func (self *Client) PushTarball(context contextpkg.Context, artifactName string, sourceUrl exturl.URL, registry *resources.Registry) (string, error) {
 	if registryHost, err := self.GetHost(registry); err == nil {
 		if options, err := self.GetRemoteOptions(registry); err == nil {
 			self.Log.Infof("publishing image %q at %q on %q", artifactName, sourceUrl.String(), registryHost)
 
 			opener := func() (io.ReadCloser, error) {
-				if reader, err := sourceUrl.Open(); err == nil {
+				if reader, err := sourceUrl.Open(context); err == nil {
 					return gzip.NewReader(reader)
 				} else {
 					return nil, err
@@ -50,6 +51,7 @@ func (self *Client) PushTarball(artifactName string, sourceUrl urlpkg.URL, regis
 				tag := fmt.Sprintf("%s/%s", registryHost, artifactName)
 				if tag_, err := namepkg.NewTag(tag); err == nil {
 					if image, err := tarball.Image(opener, &contentTag); err == nil {
+						options = append(options, remote.WithContext(context))
 						if err := remote.Write(tag_, image, options...); err == nil {
 							self.Log.Infof("published image %q at %q on %q", tag, sourceUrl.String(), registryHost)
 							return tag, nil
