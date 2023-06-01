@@ -17,7 +17,7 @@ func (self *Client) PullLayer(imageName string, writer io.Writer) error {
 		}
 	}()
 
-	decoder := exturl.NewContainerImageLayerDecoder(pipeReader)
+	decoder := exturl.NewFirstTarballInTarballDecoder(pipeReader)
 	if _, err := io.Copy(writer, decoder.Decode()); err == nil {
 		return nil
 	} else {
