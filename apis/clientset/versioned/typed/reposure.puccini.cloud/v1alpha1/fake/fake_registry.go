@@ -4,11 +4,13 @@ package fake
 
 import (
 	"context"
+	json "encoding/json"
+	"fmt"
 
+	reposurepuccinicloudv1alpha1 "github.com/tliron/reposure/apis/applyconfiguration/reposure.puccini.cloud/v1alpha1"
 	v1alpha1 "github.com/tliron/reposure/resources/reposure.puccini.cloud/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -20,9 +22,9 @@ type FakeRegistries struct {
 	ns   string
 }
 
-var registriesResource = schema.GroupVersionResource{Group: "reposure.puccini.cloud", Version: "v1alpha1", Resource: "registries"}
+var registriesResource = v1alpha1.SchemeGroupVersion.WithResource("registries")
 
-var registriesKind = schema.GroupVersionKind{Group: "reposure.puccini.cloud", Version: "v1alpha1", Kind: "Registry"}
+var registriesKind = v1alpha1.SchemeGroupVersion.WithKind("Registry")
 
 // Get takes name of the registry, and returns the corresponding registry object, and an error if there is any.
 func (c *FakeRegistries) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Registry, err error) {
@@ -118,6 +120,51 @@ func (c *FakeRegistries) DeleteCollection(ctx context.Context, opts v1.DeleteOpt
 func (c *FakeRegistries) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Registry, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(registriesResource, c.ns, name, pt, data, subresources...), &v1alpha1.Registry{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1alpha1.Registry), err
+}
+
+// Apply takes the given apply declarative configuration, applies it and returns the applied registry.
+func (c *FakeRegistries) Apply(ctx context.Context, registry *reposurepuccinicloudv1alpha1.RegistryApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.Registry, err error) {
+	if registry == nil {
+		return nil, fmt.Errorf("registry provided to Apply must not be nil")
+	}
+	data, err := json.Marshal(registry)
+	if err != nil {
+		return nil, err
+	}
+	name := registry.Name
+	if name == nil {
+		return nil, fmt.Errorf("registry.Name must be provided to Apply")
+	}
+	obj, err := c.Fake.
+		Invokes(testing.NewPatchSubresourceAction(registriesResource, c.ns, *name, types.ApplyPatchType, data), &v1alpha1.Registry{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1alpha1.Registry), err
+}
+
+// ApplyStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
+func (c *FakeRegistries) ApplyStatus(ctx context.Context, registry *reposurepuccinicloudv1alpha1.RegistryApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.Registry, err error) {
+	if registry == nil {
+		return nil, fmt.Errorf("registry provided to Apply must not be nil")
+	}
+	data, err := json.Marshal(registry)
+	if err != nil {
+		return nil, err
+	}
+	name := registry.Name
+	if name == nil {
+		return nil, fmt.Errorf("registry.Name must be provided to Apply")
+	}
+	obj, err := c.Fake.
+		Invokes(testing.NewPatchSubresourceAction(registriesResource, c.ns, *name, types.ApplyPatchType, data, "status"), &v1alpha1.Registry{})
 
 	if obj == nil {
 		return nil, err
