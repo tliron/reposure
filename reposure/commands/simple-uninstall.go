@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 )
 
@@ -18,5 +20,5 @@ var simpleUninstallCommand = &cobra.Command{
 }
 
 func UninstallRegistry() {
-	NewClient().AdminClient().UninstallSimple(wait)
+	NewClient().AdminClient().UninstallSimple(context.TODO(), wait)
 }

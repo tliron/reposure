@@ -1,14 +1,11 @@
 package commands
 
 import (
-	contextpkg "context"
-
 	"github.com/tliron/commonlog"
+	"github.com/tliron/go-transcribe"
 )
 
 const toolName = "reposure"
-
-var context = contextpkg.TODO()
 
 var log = commonlog.GetLogger(toolName)
 
@@ -21,3 +18,11 @@ var follow bool
 var all bool
 var sourceRegistry string
 var wait bool
+
+func Transcriber() *transcribe.Transcriber {
+	return &transcribe.Transcriber{
+		Strict: strict,
+		Pretty: pretty,
+		Base64: base64,
+	}
+}

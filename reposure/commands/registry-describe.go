@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tliron/kutil/terminal"
-	"github.com/tliron/kutil/transcribe"
 	"github.com/tliron/kutil/util"
 	resources "github.com/tliron/reposure/resources/reposure.puccini.cloud/v1alpha1"
 )
@@ -32,7 +31,7 @@ func DescribeRegistry(registryName string) {
 	util.FailOnError(err)
 
 	if format != "" {
-		transcribe.Print(resources.RegistryToARD(registry), format, os.Stdout, strict, pretty)
+		Transcriber().Print(resources.RegistryToARD(registry), os.Stdout, format)
 	} else {
 		terminal.Printf("%s: %s\n", terminal.DefaultStylist.TypeName("Name"), terminal.DefaultStylist.Value(registry.Name))
 		terminal.Printf("%s: %s\n", terminal.DefaultStylist.TypeName("Type"), terminal.DefaultStylist.Value(string(registry.Spec.Type)))

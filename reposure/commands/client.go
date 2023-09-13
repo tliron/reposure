@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	contextpkg "context"
 	"fmt"
 
@@ -49,7 +50,7 @@ func NewClient() *Client {
 		Config:     config,
 		Kubernetes: kubernetes,
 		REST:       kubernetes.CoreV1().RESTClient(),
-		Context:    context,
+		Context:    context.TODO(),
 		Namespace:  namespace_,
 	}
 }

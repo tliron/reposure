@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tliron/go-ard"
 	"github.com/tliron/kutil/terminal"
-	"github.com/tliron/kutil/transcribe"
 	"github.com/tliron/kutil/util"
 	resources "github.com/tliron/reposure/resources/reposure.puccini.cloud/v1alpha1"
 )
@@ -54,6 +53,6 @@ func ListRegistries() {
 		for index, registry := range registries.Items {
 			list[index] = resources.RegistryToARD(&registry)
 		}
-		transcribe.Print(list, format, os.Stdout, strict, pretty)
+		Transcriber().Print(list, os.Stdout, format)
 	}
 }

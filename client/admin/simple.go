@@ -1,6 +1,7 @@
 package admin
 
 import (
+	contextpkg "context"
 	"fmt"
 
 	certmanager "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
@@ -73,7 +74,7 @@ func (self *Client) InstallSimple(sourceRegistryHost string, authentication bool
 	return nil
 }
 
-func (self *Client) UninstallSimple(wait bool) {
+func (self *Client) UninstallSimple(context contextpkg.Context, wait bool) {
 	var gracePeriodSeconds int64 = 0
 	deleteOptions := meta.DeleteOptions{
 		GracePeriodSeconds: &gracePeriodSeconds,
@@ -113,23 +114,23 @@ func (self *Client) UninstallSimple(wait bool) {
 
 	if wait {
 		getOptions := meta.GetOptions{}
-		kubernetes.WaitForDeletion(self.Log, "simple service", func() bool {
+		kubernetes.WaitForDeletion(context, self.Log, "simple service", func() bool {
 			_, err := self.Kubernetes.CoreV1().Services(self.Namespace).Get(self.Context, appName, getOptions)
 			return err == nil
 		})
-		kubernetes.WaitForDeletion(self.Log, "simple deployment", func() bool {
+		kubernetes.WaitForDeletion(context, self.Log, "simple deployment", func() bool {
 			_, err := self.Kubernetes.AppsV1().Deployments(self.Namespace).Get(self.Context, appName, getOptions)
 			return err == nil
 		})
-		kubernetes.WaitForDeletion(self.Log, "simple certificate", func() bool {
+		kubernetes.WaitForDeletion(context, self.Log, "simple certificate", func() bool {
 			_, err := self.CertManager.CertmanagerV1().Certificates(self.Namespace).Get(self.Context, appName, getOptions)
 			return err == nil
 		})
-		kubernetes.WaitForDeletion(self.Log, "simple issuer", func() bool {
+		kubernetes.WaitForDeletion(context, self.Log, "simple issuer", func() bool {
 			_, err := self.CertManager.CertmanagerV1().Issuers(self.Namespace).Get(self.Context, appName, getOptions)
 			return err == nil
 		})
-		kubernetes.WaitForDeletion(self.Log, "simple authentication secret", func() bool {
+		kubernetes.WaitForDeletion(context, self.Log, "simple authentication secret", func() bool {
 			_, err := self.Kubernetes.CoreV1().Secrets(self.Namespace).Get(self.Context, secretName, getOptions)
 			return err == nil
 		})

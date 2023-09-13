@@ -1,6 +1,7 @@
 package admin
 
 import (
+	contextpkg "context"
 	"fmt"
 
 	"github.com/tliron/kutil/kubernetes"
@@ -63,7 +64,7 @@ func (self *Client) InstallOperator(sourceRegistryHost string, wait bool) error 
 	return nil
 }
 
-func (self *Client) UninstallOperator(wait bool) {
+func (self *Client) UninstallOperator(context contextpkg.Context, wait bool) {
 	var gracePeriodSeconds int64 = 0
 	deleteOptions := meta.DeleteOptions{
 		GracePeriodSeconds: &gracePeriodSeconds,
@@ -105,29 +106,29 @@ func (self *Client) UninstallOperator(wait bool) {
 
 	if wait {
 		getOptions := meta.GetOptions{}
-		kubernetes.WaitForDeletion(self.Log, "operator deployment", func() bool {
+		kubernetes.WaitForDeletion(context, self.Log, "operator deployment", func() bool {
 			_, err := self.Kubernetes.AppsV1().Deployments(self.Namespace).Get(self.Context, appName, getOptions)
 			return err == nil
 		})
-		kubernetes.WaitForDeletion(self.Log, "cluster role binding", func() bool {
+		kubernetes.WaitForDeletion(context, self.Log, "cluster role binding", func() bool {
 			_, err := self.Kubernetes.RbacV1().ClusterRoleBindings().Get(self.Context, self.NamePrefix, getOptions)
 			return err == nil
 		})
 		if !self.ClusterMode {
-			kubernetes.WaitForDeletion(self.Log, "role binding", func() bool {
+			kubernetes.WaitForDeletion(context, self.Log, "role binding", func() bool {
 				_, err := self.Kubernetes.RbacV1().RoleBindings(self.Namespace).Get(self.Context, self.NamePrefix, getOptions)
 				return err == nil
 			})
-			kubernetes.WaitForDeletion(self.Log, "role", func() bool {
+			kubernetes.WaitForDeletion(context, self.Log, "role", func() bool {
 				_, err := self.Kubernetes.RbacV1().Roles(self.Namespace).Get(self.Context, self.NamePrefix, getOptions)
 				return err == nil
 			})
 		}
-		kubernetes.WaitForDeletion(self.Log, "service account", func() bool {
+		kubernetes.WaitForDeletion(context, self.Log, "service account", func() bool {
 			_, err := self.Kubernetes.CoreV1().ServiceAccounts(self.Namespace).Get(self.Context, self.NamePrefix, getOptions)
 			return err == nil
 		})
-		kubernetes.WaitForDeletion(self.Log, "registry custom resource definition", func() bool {
+		kubernetes.WaitForDeletion(context, self.Log, "registry custom resource definition", func() bool {
 			_, err := self.APIExtensions.ApiextensionsV1().CustomResourceDefinitions().Get(self.Context, resources.RegistryCustomResourceDefinition.Name, getOptions)
 			return err == nil
 		})

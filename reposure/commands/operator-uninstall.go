@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 )
 
@@ -18,5 +20,5 @@ var operatorUninstallCommand = &cobra.Command{
 }
 
 func UninstallOperator() {
-	NewClient().AdminClient().UninstallOperator(wait)
+	NewClient().AdminClient().UninstallOperator(context.TODO(), wait)
 }
