@@ -3,7 +3,7 @@ package command
 import (
 	"io"
 
-	"github.com/tliron/exturl"
+	"github.com/tliron/kutil/compression"
 )
 
 func (self *Client) PullLayer(imageName string, writer io.Writer) error {
@@ -17,7 +17,7 @@ func (self *Client) PullLayer(imageName string, writer io.Writer) error {
 		}
 	}()
 
-	decoder := exturl.NewFirstTarballInTarballDecoder(pipeReader)
+	decoder := compression.NewFirstTarballInTarballDecoder(pipeReader)
 	if _, err := io.Copy(writer, decoder.Decode()); err == nil {
 		return nil
 	} else {

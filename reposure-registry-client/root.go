@@ -5,7 +5,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tliron/commonlog"
-	"github.com/tliron/kutil/terminal"
 	"github.com/tliron/kutil/util"
 	directclient "github.com/tliron/reposure/client/direct"
 )
@@ -36,11 +35,7 @@ var rootCommand = &cobra.Command{
 	Use:   "reposure-registry-client",
 	Short: "Access a container image registry",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		cleanup, err := terminal.ProcessColorizeFlag(colorize)
-		util.FailOnError(err)
-		if cleanup != nil {
-			util.OnExitError(cleanup)
-		}
+		util.InitializeColorization(colorize)
 		if logTo == "" {
 			commonlog.Configure(verbose, nil)
 		} else {
@@ -52,6 +47,7 @@ var rootCommand = &cobra.Command{
 		}
 
 		if certificatePath != "" {
+			var err error
 			roundTripper, err = directclient.TLSRoundTripper(certificatePath)
 			util.FailOnError(err)
 		}

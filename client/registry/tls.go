@@ -40,7 +40,7 @@ func (self *Client) GetTLSCertBytes(registry *resources.Registry) ([]byte, error
 
 func (self *Client) GetTLSCertPool(registry *resources.Registry) (*x509.CertPool, error) {
 	if bytes, err := self.GetTLSCertBytes(registry); err == nil {
-		return util.ParseX509CertPool(bytes)
+		return util.ParseX509CertificatePool(bytes)
 	} else {
 		return nil, err
 	}

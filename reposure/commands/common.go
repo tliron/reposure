@@ -21,8 +21,9 @@ var wait bool
 
 func Transcriber() *transcribe.Transcriber {
 	return &transcribe.Transcriber{
-		Strict: strict,
-		Pretty: pretty,
-		Base64: base64,
+		Strict:      strict,
+		Format:      format,
+		ForTerminal: pretty,
+		Base64:      base64,
 	}
 }

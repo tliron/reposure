@@ -28,7 +28,7 @@ func TLSRoundTripper(certificatePath string) (http.RoundTripper, error) {
 
 func CertPool(certificatePath string) (*x509.CertPool, error) {
 	if bytes, err := os.ReadFile(certificatePath); err == nil {
-		return util.ParseX509CertPool(bytes)
+		return util.ParseX509CertificatePool(bytes)
 	} else {
 		return nil, err
 	}
